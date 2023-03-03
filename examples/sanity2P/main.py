@@ -28,15 +28,6 @@ class EnvironmentActorController(EnvironmentController):
     actor_controller2: ActorController
     actor_controllerList: List[ActorController]
 
-    # def __init__(self, actor_controller: ActorController, actor_controller2: ActorController) -> None:
-    #     """
-    #     Initialize this object.
-
-    #     :param actor_controller: The actor controller to use for the single actor in the environment.
-    #     """
-    #     self.actor_controller = actor_controller
-    #     self.actor_controller2 = actor_controller2
-
     def __init__(self, actor_controllerList: List[ActorController]) -> None:
         """
         Initialize this object.
@@ -88,20 +79,8 @@ class Simulator:
 
         env = Environment(EnvironmentActorController(controllerList))
         env.static_geometries.extend(terrains.flat().static_geometry)
-        # env.actors.append(
-        #     PosedActor(
-        #         actor,
-        #         Vector3(
-        #             [
-        #                 0.0,
-        #                 0.0,
-        #                 bounding_box.size.z / 2.0 - bounding_box.offset.z,
-        #             ]
-        #         ),
-        #         Quaternion(),
-        #         [0.0 for _ in controller.get_dof_targets()],
-        #     )
-        # )
+
+
         for i in range(len(controllerList)):
             env.actors.append(
                 PosedActor(
