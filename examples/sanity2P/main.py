@@ -80,7 +80,7 @@ class Simulator:
         env = Environment(EnvironmentActorController(controllerList))
         env.static_geometries.extend(terrains.flat().static_geometry)
 
-
+        
         for i in range(len(controllerList)):
             env.actors.append(
                 PosedActor(
