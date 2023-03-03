@@ -17,6 +17,8 @@ from revolve2.core.physics.running import (
 from revolve2.runners.mujoco import LocalRunner
 from revolve2.standard_resources import terrains
 
+from typing import List
+
 
 # This is exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
 class EnvironmentActorController(EnvironmentController):
@@ -24,15 +26,25 @@ class EnvironmentActorController(EnvironmentController):
 
     actor_controller: ActorController
     actor_controller2: ActorController
+    actor_controllerList: List[ActorController]
 
-    def __init__(self, actor_controller: ActorController, actor_controller2: ActorController) -> None:
+    # def __init__(self, actor_controller: ActorController, actor_controller2: ActorController) -> None:
+    #     """
+    #     Initialize this object.
+
+    #     :param actor_controller: The actor controller to use for the single actor in the environment.
+    #     """
+    #     self.actor_controller = actor_controller
+    #     self.actor_controller2 = actor_controller2
+
+    def __init__(self, actor_controllerList: List[ActorController]) -> None:
         """
         Initialize this object.
 
-        :param actor_controller: The actor controller to use for the single actor in the environment.
+        :param actor_controller: The actor controller to use for multiple actors in the environment.
         """
-        self.actor_controller = actor_controller
-        self.actor_controller2 = actor_controller2
+        self.actor_controllerList = actor_controllerList
+
 
     def control(self, dt: float, actor_control: ActorControl) -> None:
         """
@@ -41,10 +53,11 @@ class EnvironmentActorController(EnvironmentController):
         :param dt: Time since last call to this function.
         :param actor_control: Object used to interface with the environment.
         """
-        self.actor_controller.step(dt)
-        actor_control.set_dof_targets(0, self.actor_controller.get_dof_targets())
-        self.actor_controller2.step(dt)
-        actor_control.set_dof_targets(1, self.actor_controller2.get_dof_targets())
+
+        for ind, actor in enumerate(self.actor_controllerList):
+            actor.step(dt)
+            actor_control.set_dof_targets(ind, actor.get_dof_targets())
+
 
 
 class Simulator:
@@ -71,36 +84,39 @@ class Simulator:
         actor, controller = robot.make_actor_and_controller()
         bounding_box = actor.calc_aabb()
 
-        env = Environment(EnvironmentActorController(controller,controller))
+        controllerList = [controller for i in range(5)]
+
+        env = Environment(EnvironmentActorController(controllerList))
         env.static_geometries.extend(terrains.flat().static_geometry)
-        env.actors.append(
-            PosedActor(
-                actor,
-                Vector3(
-                    [
-                        0.0,
-                        0.0,
-                        bounding_box.size.z / 2.0 - bounding_box.offset.z,
-                    ]
-                ),
-                Quaternion(),
-                [0.0 for _ in controller.get_dof_targets()],
-            )
-        )
-        env.actors.append(
-            PosedActor(
-                actor,
-                Vector3(
-                    [
-                        0.0,
-                        0.0,
-                        bounding_box.size.z / 2.0 - bounding_box.offset.z,
-                    ]
-                ),
-                Quaternion(),
-                [0.0 for _ in controller.get_dof_targets()],
-            )
-        )
+        # env.actors.append(
+        #     PosedActor(
+        #         actor,
+        #         Vector3(
+        #             [
+        #                 0.0,
+        #                 0.0,
+        #                 bounding_box.size.z / 2.0 - bounding_box.offset.z,
+        #             ]
+        #         ),
+        #         Quaternion(),
+        #         [0.0 for _ in controller.get_dof_targets()],
+        #     )
+        # )
+        for i in range(len(controllerList)):
+            env.actors.append(
+                PosedActor(
+                    actor,
+                    Vector3(
+                        [
+                            0.0,
+                            0.0,
+                            bounding_box.size.z / 2.0 - bounding_box.offset.z + i,
+                        ]
+                    ),
+                    Quaternion(),
+                    [0.0 for _ in controller.get_dof_targets()],
+                )
+            )    
         batch.environments.append(env)
 
         runner = LocalRunner()
