@@ -22,6 +22,7 @@ async def main() -> None:
     SAMPLING_FREQUENCY = 5
     CONTROL_FREQUENCY = 60
 
+    #bara bara bara
     POPULATION_SIZE = 30
     OFFSPRING_SIZE = 30
     NUM_GENERATIONS = 10
