@@ -28,6 +28,25 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 
 
+#Imports to build your own body
+from revolve2.actor_controller import ActorController
+from revolve2.core.modular_robot import ActiveHinge, Body, Brick, ModularRobot
+from revolve2.core.modular_robot.brains import BrainCpgNetworkNeighbourRandom
+from revolve2.core.physics.running import (
+    ActorControl,
+    Batch,
+    Environment,
+    EnvironmentController,
+    PosedActor,
+)
+from revolve2.runners.mujoco import LocalRunner
+from revolve2.standard_resources import terrains
+import math
+from random import Random
+from pyrr import Quaternion, Vector3
+from typing import List
+
+
 def _make_multineat_params() -> multineat.Parameters:
     multineat_params = multineat.Parameters()
 
@@ -278,7 +297,30 @@ def develop(genotype: Genotype) -> ModularRobot:
     :param genotype: The genotype to create the robot from.
     :returns: The created robot.
     """
-    body = body_develop(genotype.body)
+    body = Body()
+
+    body.core.left = ActiveHinge(math.pi / 2.0)
+    body.core.left.attachment = Brick(0.0)
+    body.core.left.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.left.attachment.front.attachment = Brick(0.0)
+
+    body.core.right = ActiveHinge(math.pi / 2.0)
+    body.core.right.attachment = Brick(0.0)
+    body.core.right.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.right.attachment.front.attachment = Brick(0.0)
+
+    body.core.back = ActiveHinge(math.pi / 2.0)
+    body.core.back.attachment = Brick(0.0)
+    body.core.back.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.back.attachment.front.attachment = Brick(0.0)
+
+    body.core.front = ActiveHinge(math.pi / 2.0)
+    body.core.front.attachment = Brick(0.0)
+    body.core.front.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.front.attachment.front.attachment = Brick(0.0)
+
+    body.finalize()
+    
     brain = brain_develop(genotype.brain, body)
     return ModularRobot(body, brain)
 

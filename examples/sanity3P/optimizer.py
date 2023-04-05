@@ -221,7 +221,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
@@ -288,7 +288,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(5)]
+            controllerList = [controller for i in range(1)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)

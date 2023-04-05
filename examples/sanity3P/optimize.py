@@ -16,15 +16,15 @@ import os
 async def main() -> None:
     """Run the optimization process."""
     # number of initial mutations for body and brain CPPNWIN networks
-    NUM_INITIAL_MUTATIONS = 10
+    NUM_INITIAL_MUTATIONS = 30
 
-    SIMULATION_TIME = 5
-    SAMPLING_FREQUENCY = 1
+    SIMULATION_TIME = 10
+    SAMPLING_FREQUENCY = 5
     CONTROL_FREQUENCY = 60
 
-    POPULATION_SIZE = 3
-    OFFSPRING_SIZE = 3
-    NUM_GENERATIONS = 3
+    POPULATION_SIZE = 30
+    OFFSPRING_SIZE = 30
+    NUM_GENERATIONS = 10
 
     logging.basicConfig(
         level=logging.INFO,
@@ -82,7 +82,7 @@ async def main() -> None:
 
     logging.info("Finished optimizing.")
 
-    os.remove('/home/ubuntu/Desktop/work/BProject/multii/revolve2-multi/examples/sanity3P/db.sqlite')
+    #os.remove('/home/ubuntu/Desktop/work/BProject/multii/revolve2-multi/examples/sanity3P/db.sqlite')
 
 
 if __name__ == "__main__":
