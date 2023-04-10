@@ -6,7 +6,9 @@ import numpy as np
 import numpy.typing as npt
 from revolve2.actor_controller import ActorController
 from revolve2.serialization import SerializeError, StaticData
-
+import math
+#from revolve2.core.modular_robot import Body
+import numpy as np
 
 class CpgActorController(ActorController):
     """
@@ -28,6 +30,8 @@ class CpgActorController(ActorController):
         num_output_neurons: int,
         weight_matrix: npt.NDArray[np.float_],
         dof_ranges: npt.NDArray[np.float_],
+        jointsLeft: List, 
+        jointsRight: List,
     ) -> None:
         """
         Initialize this object.
@@ -47,6 +51,12 @@ class CpgActorController(ActorController):
         self._weight_matrix = weight_matrix
         self._dof_ranges = dof_ranges
 
+        self._jointsLeft = jointsLeft
+        self._jointsRight = jointsRight
+        self.tarA = 0
+        self.p = 7
+        #self.body = body
+
     def step(self, dt: float) -> None:
         """
         Step the controller dt seconds forward.
@@ -54,6 +64,47 @@ class CpgActorController(ActorController):
         :param dt: The number of seconds to step forward.
         """
         self._state = self._rk45(self._state, self._weight_matrix, dt)
+
+        #This scales the joint activation functions to the target angles
+        self.findTarAngle()
+        scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
+        if self.tarA < 0:
+            for i in self._jointsLeft:
+                self._state[i] = self._state[i]*scaleD
+        if self.tarA > 0:
+            for j in self._jointsRight:
+                self._state[j] = self._state[j]*scaleD
+
+    ##Calculating angles
+    def unit_vector(vector):
+        """ Returns the unit vector of the vector.  """
+        return vector / np.linalg.norm(vector)
+
+    def angle_between(v1, v2):
+        """ Returns the angle in radians between vectors 'v1' and 'v2'::
+
+            >>> angle_between((1, 0, 0), (0, 1, 0))
+            1.5707963267948966
+            >>> angle_between((1, 0, 0), (1, 0, 0))
+            0.0
+            >>> angle_between((1, 0, 0), (-1, 0, 0))
+            3.141592653589793
+        """
+        v1_u = unit_vector(v1)
+        v2_u = unit_vector(v2)
+        return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+    def findTarAngle(self):
+        #This will be a neural network but for now its more simple 
+        #self.tarA = self.angle_between(self.bodyA,[0,1])
+        self.tarA = -1*self.bodyA
+        pass
+
+    def passInfo(self, *args) -> None:
+        self.bodyA = args[0]
+        self.bodyPos = args[1]
+        pass
+
 
     @staticmethod
     def _rk45(

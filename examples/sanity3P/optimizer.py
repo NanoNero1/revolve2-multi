@@ -61,6 +61,10 @@ class EnvironmentActorController(EnvironmentController):
         """
 
         for ind, actor in enumerate(self.actor_controllerList):
+            #Find a way to get the angle here
+            #actor.
+
+            actor.passInfo()
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
@@ -324,12 +328,14 @@ class Optimizer(EAOptimizer[Genotype, float]):
         # TODO simulation can continue slightly passed the defined sim time.
 
         # distance traveled on the xy plane
-        return float(
+        """ return float(
             math.sqrt(
                 (begin_state.position[0] - end_state.position[0]) ** 2
                 + ((begin_state.position[1] - end_state.position[1]) ** 2)
             )
-        )
+        ) """
+    
+        return float(end_state.position[1])
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
         session.add(

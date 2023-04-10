@@ -57,9 +57,13 @@ class BrainCpgNetworkNeighbour(Brain, ABC):
         )
         initial_state = cpg_network_structure.make_uniform_state(0.5 * math.sqrt(2))
         dof_ranges = cpg_network_structure.make_uniform_dof_ranges(1.0)
+        #[]
+        # Find the left and right joint sets (and corresponding cpg indexs)
+        jointsLeft = [hinge.id for hinge in [joint for joint in active_hinges if body.grid_position(joint)[0] < 0 ]]
+        jointsRight = [hinge.id for hinge in [joint for joint in active_hinges if body.grid_position(joint)[0] > 0 ]]
 
         return ControllerCpg(
-            initial_state, cpg_network_structure.num_cpgs, weight_matrix, dof_ranges
+            initial_state, cpg_network_structure.num_cpgs, weight_matrix, dof_ranges, jointsLeft, jointsRight,
         )
 
     @abstractmethod
