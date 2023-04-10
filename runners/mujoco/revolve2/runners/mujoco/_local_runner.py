@@ -142,6 +142,8 @@ class LocalRunner(Runner):
             if time >= last_control_time + control_step:
                 last_control_time = math.floor(time / control_step) * control_step
                 control_user = ActorControl()
+
+                #Pass along real time body data to controller
                 env_descr.controller.control(control_step, control_user)
                 actor_targets = control_user._dof_targets
                 actor_targets.sort(key=lambda t: t[0])
