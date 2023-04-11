@@ -54,7 +54,7 @@ class CpgActorController(ActorController):
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
-        self.p = 7
+        self.p = 2
         #self.body = body
 
     def step(self, dt: float) -> None:
@@ -68,12 +68,20 @@ class CpgActorController(ActorController):
         #This scales the joint activation functions to the target angles
         self.findTarAngle()
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
+        '''
         if self.tarA < 0:
             for i in self._jointsLeft:
                 self._state[i] = self._state[i]*scaleD
         if self.tarA > 0:
             for j in self._jointsRight:
                 self._state[j] = self._state[j]*scaleD
+        '''
+        if self.tarA < 0:
+            for i in self._jointsLeft:
+                self._state[i] = 0
+        if self.tarA > 0:
+            for j in self._jointsRight:
+                self._state[j] = 0
 
     ##Calculating angles
     def unit_vector(vector):
