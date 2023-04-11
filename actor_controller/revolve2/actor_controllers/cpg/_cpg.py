@@ -97,12 +97,14 @@ class CpgActorController(ActorController):
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
         #self.tarA = self.angle_between(self.bodyA,[0,1])
-        self.tarA = -1*self.bodyA
+        #self.tarA = -1*self.bodyA
+        self.tarA = 0.5
         pass
 
     def passInfo(self, *args) -> None:
-        self.bodyA = args[0]
-        self.bodyPos = args[1]
+        actorState = args[0]
+        self.bodyA = actorState.orientation
+        self.bodyPos = actorState.position
         pass
 
 

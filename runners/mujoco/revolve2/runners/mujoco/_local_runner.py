@@ -144,7 +144,9 @@ class LocalRunner(Runner):
                 control_user = ActorControl()
 
                 #Pass along real time body data to controller
-                env_descr.controller.control(control_step, control_user)
+                actorState = cls._get_actor_states(env_descr, data, model)[0]
+                env_descr.controller.control(control_step, control_user, [actorState])
+                
                 actor_targets = control_user._dof_targets
                 actor_targets.sort(key=lambda t: t[0])
                 targets = [

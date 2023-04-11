@@ -52,7 +52,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actor_controllerList = actor_controllerList
 
 
-    def control(self, dt: float, actor_control: ActorControl) -> None:
+    def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
         """
         Control the single actor in the environment using an ActorController.
 
@@ -60,11 +60,17 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_control: Object used to interface with the environment.
         """
 
+        actorState = argList[0]
+
+        if actorState:
+            print(actorState.position)
+            wamp
+
         for ind, actor in enumerate(self.actor_controllerList):
             #Find a way to get the angle here
             #actor.
 
-            actor.passInfo()
+            actor.passInfo(actorState)
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
