@@ -11,6 +11,7 @@ import revolve2.core.optimization.ea.generic_ea.selection as selection
 import sqlalchemy
 from genotype import Genotype, GenotypeSerializer, crossover, develop, mutate
 from pyrr import Quaternion, Vector3
+import quaternion as qt
 from revolve2.core.database import IncompatibleError
 from revolve2.core.database.serializers import FloatSerializer
 from revolve2.core.optimization import DbId
@@ -61,10 +62,12 @@ class EnvironmentActorController(EnvironmentController):
         """
 
         actorState = argList[0]
-
+        '''
+        #qt.as_rotation_vector(actorState.orientation)
         if actorState:
-            print(actorState.position)
+            print(actorState.orientation.angle)
             wamp
+        '''
 
         for ind, actor in enumerate(self.actor_controllerList):
             #Find a way to get the angle here
