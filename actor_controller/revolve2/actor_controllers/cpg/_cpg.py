@@ -9,6 +9,9 @@ from revolve2.serialization import SerializeError, StaticData
 import math
 #from revolve2.core.modular_robot import Body
 import numpy as np
+from datetime import datetime
+#import time
+from pyrr import Quaternion, Matrix33, matrix33
 
 class CpgActorController(ActorController):
     """
@@ -55,6 +58,7 @@ class CpgActorController(ActorController):
         self._jointsRight = jointsRight
         self.tarA = 0
         self.p = 2
+        self.m33 = Matrix33()
         #self.body = body
 
     def step(self, dt: float) -> None:
@@ -82,6 +86,14 @@ class CpgActorController(ActorController):
         if self.tarA > 0:
             for j in self._jointsRight:
                 self._state[j] = 0
+
+        now = datetime.now()
+
+        if now.microsecond % 20 < 1:
+            print(f"Body Pos: %s" % self.bodyPos)
+            print(self.m33)
+            print(f"Body A: %s" % self.bodyA)
+
 
     ##Calculating angles
     def unit_vector(vector):
@@ -111,7 +123,10 @@ class CpgActorController(ActorController):
 
     def passInfo(self, *args) -> None:
         actorState = args[0]
-        self.bodyA = actorState.orientation.angle
+        ori = actorState.orientation
+        self.m33 = matrix33.create_from_quaternion(ori)
+        self.axis = actorState.orientation.axis
+        self.bodyA = 1
         self.bodyPos = actorState.position
         pass
 
