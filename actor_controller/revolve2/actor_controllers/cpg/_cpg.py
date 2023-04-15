@@ -90,8 +90,16 @@ class CpgActorController(ActorController):
         now = datetime.now()
 
         if now.microsecond % 20 < 1:
+            # I need to figure out what does what
+            # Vec1: "right"
+            # Vec2: "up"
+            # Vec3: z direction
+            #so we use Vec1, consider "RIGHT as angle 0"
+
             #print(f"Body Pos: %s" % self.bodyPos)
-            print(f"Body Vec: %s" % self.m33.c1[:1])
+            print(f"Body Vec1: %s" % self.m33.c1[:2])
+            print(f"Body Vec2: %s" % self.m33.c2[:2])
+            print(f"Body Vec3: %s" % self.m33.c3[:2])
             #print(f"Body A: %s" % self.bodyA)
 
 
