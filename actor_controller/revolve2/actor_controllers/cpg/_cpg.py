@@ -11,7 +11,7 @@ import math
 import numpy as np
 from datetime import datetime
 #import time
-from pyrr import Quaternion, Matrix33, matrix33
+from pyrr import Quaternion, Matrix33, matrix33, vector
 
 class CpgActorController(ActorController):
     """
@@ -90,9 +90,9 @@ class CpgActorController(ActorController):
         now = datetime.now()
 
         if now.microsecond % 20 < 1:
-            print(f"Body Pos: %s" % self.bodyPos)
-            print(self.m33)
-            print(f"Body A: %s" % self.bodyA)
+            #print(f"Body Pos: %s" % self.bodyPos)
+            print(f"Body Vec: %s" % self.m33.c1[:1])
+            #print(f"Body A: %s" % self.bodyA)
 
 
     ##Calculating angles
@@ -124,7 +124,7 @@ class CpgActorController(ActorController):
     def passInfo(self, *args) -> None:
         actorState = args[0]
         ori = actorState.orientation
-        self.m33 = matrix33.create_from_quaternion(ori)
+        self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
         self.bodyA = 1
         self.bodyPos = actorState.position
