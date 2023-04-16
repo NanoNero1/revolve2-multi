@@ -72,20 +72,23 @@ class CpgActorController(ActorController):
         #This scales the joint activation functions to the target angles
         self.findTarAngle()
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
-        '''
+
         if self.tarA < 0:
             for i in self._jointsLeft:
                 self._state[i] = self._state[i]*scaleD
         if self.tarA > 0:
             for j in self._jointsRight:
                 self._state[j] = self._state[j]*scaleD
-        '''
-        if self.tarA < 0:
-            for i in self._jointsLeft:
-                self._state[i] = 0
-        if self.tarA > 0:
-            for j in self._jointsRight:
-                self._state[j] = 0
+
+        #if True:
+        #    for i in self._jointsLeft:
+        #        self._state[i] = 0
+        #if False:
+        #    for j in self._jointsRight:
+        #        self._state[j] = 0
+
+        #for i in range(self._num_output_neurons):
+        #    self._state[i] = 0
 
         now = datetime.now()
 
@@ -97,18 +100,17 @@ class CpgActorController(ActorController):
             #so we use Vec1, consider "RIGHT as angle 0"
 
             #print(f"Body Pos: %s" % self.bodyPos)
-            print(f"Body Vec1: %s" % self.m33.c1[:2])
-            print(f"Body Vec2: %s" % self.m33.c2[:2])
-            print(f"Body Vec3: %s" % self.m33.c3[:2])
-            #print(f"Body A: %s" % self.bodyA)
+            #print(f"Body Vec1: %s" % self.m33.c1[:2])
+            #print(f"Angle: %s" % self.bodyA)
+            a=[] 
 
 
     ##Calculating angles
-    def unit_vector(vector):
+    def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
         return vector / np.linalg.norm(vector)
 
-    def angle_between(v1, v2):
+    def angle_between(self, v1, v2):
         """ Returns the angle in radians between vectors 'v1' and 'v2'::
 
             >>> angle_between((1, 0, 0), (0, 1, 0))
@@ -118,8 +120,8 @@ class CpgActorController(ActorController):
             >>> angle_between((1, 0, 0), (-1, 0, 0))
             3.141592653589793
         """
-        v1_u = unit_vector(v1)
-        v2_u = unit_vector(v2)
+        v1_u = self.unit_vector(v1)
+        v2_u = self.unit_vector(v2)
         return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
     def findTarAngle(self):
@@ -134,7 +136,7 @@ class CpgActorController(ActorController):
         ori = actorState.orientation
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
-        self.bodyA = 1
+        self.bodyA = self.angle_between(np.array(self.m33.c1[:2]),[1,0])
         self.bodyPos = actorState.position
         pass
 

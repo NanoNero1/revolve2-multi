@@ -62,12 +62,6 @@ class EnvironmentActorController(EnvironmentController):
         """
 
         actorState = argList[0]
-        '''
-        #qt.as_rotation_vector(actorState.orientation)
-        if actorState:
-            print(actorState.orientation.angle)
-            wamp
-        '''
 
         for ind, actor in enumerate(self.actor_controllerList):
             #Find a way to get the angle here
@@ -234,7 +228,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
