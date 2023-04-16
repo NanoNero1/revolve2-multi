@@ -57,7 +57,7 @@ class CpgActorController(ActorController):
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
-        self.p = 2
+        self.p = 3
         self.m33 = Matrix33()
         #self.body = body
 
@@ -73,12 +73,17 @@ class CpgActorController(ActorController):
         self.findTarAngle()
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
 
+        LR = "O"
         if self.tarA < 0:
+            LR = "L"
             for i in self._jointsLeft:
                 self._state[i] = self._state[i]*scaleD
-        if self.tarA > 0:
+                #self._state[i] = 0
+        else:
+            LR = "R"
             for j in self._jointsRight:
                 self._state[j] = self._state[j]*scaleD
+                #self._state[j] = 0
 
         #if True:
         #    for i in self._jointsLeft:
@@ -102,6 +107,13 @@ class CpgActorController(ActorController):
             #print(f"Body Pos: %s" % self.bodyPos)
             #print(f"Body Vec1: %s" % self.m33.c1[:2])
             #print(f"Angle: %s" % self.bodyA)
+            
+            #print(self._jointsLeft)
+            #print(self._jointsRight)
+            print(f"BAngle %s" % self.bodyA)
+            print(f"TAngle %s" % self.tarA)
+            print(f"L/R %s" % LR)
+
             a=[] 
 
 
@@ -122,13 +134,20 @@ class CpgActorController(ActorController):
         """
         v1_u = self.unit_vector(v1)
         v2_u = self.unit_vector(v2)
-        return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+        #This is a crude way to add direction for now
+        if v1_u[1] < 0: 
+            drct = 1
+        else:
+            drct = -1
+
+        return ((math.pi/2.0) + drct*np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
         #self.tarA = self.angle_between(self.bodyA,[0,1])
         #self.tarA = -1*self.bodyA
-        self.tarA = self.bodyA
+        self.tarA = -1*self.bodyA
         pass
 
     def passInfo(self, *args) -> None:
@@ -136,7 +155,7 @@ class CpgActorController(ActorController):
         ori = actorState.orientation
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
-        self.bodyA = self.angle_between(np.array(self.m33.c1[:2]),[1,0])
+        self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[1,0])
         self.bodyPos = actorState.position
         pass
 
