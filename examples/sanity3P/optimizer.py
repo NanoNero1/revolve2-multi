@@ -228,7 +228,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
@@ -338,7 +338,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             )
         ) """
     
-        return float(end_state.position[1])
+        return float(end_state.position[0])
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
         session.add(
