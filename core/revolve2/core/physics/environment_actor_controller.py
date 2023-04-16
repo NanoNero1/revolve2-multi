@@ -2,6 +2,7 @@
 
 from revolve2.actor_controller import ActorController
 from revolve2.core.physics.running import ActorControl, EnvironmentController
+from typing import List
 
 
 class EnvironmentActorController(EnvironmentController):
@@ -17,12 +18,15 @@ class EnvironmentActorController(EnvironmentController):
         """
         self.actor_controller = actor_controller
 
-    def control(self, dt: float, actor_control: ActorControl) -> None:
+    def control(self, dt: float, actor_control: ActorControl, argList: List,) -> None:
         """
         Control the single actor in the environment using an ActorController.
 
         :param dt: Time since last call to this function.
         :param actor_control: Object used to interface with the environment.
         """
+        actorState = argList[0]
+
+        self.actor_controller.passInfo(actorState)
         self.actor_controller.step(dt)
         actor_control.set_dof_targets(0, self.actor_controller.get_dof_targets())

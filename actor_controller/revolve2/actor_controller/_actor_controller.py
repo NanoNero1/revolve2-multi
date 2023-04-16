@@ -19,6 +19,15 @@ class ActorController(Serializable, ABC):
         pass
 
     @abstractmethod
+    def passInfo(self, *args) -> None:
+        """
+        Pass arbitrary arguments for sensory inputs
+
+        :param *args: arbitrary input values
+        """
+        pass 
+
+    @abstractmethod
     def get_dof_targets(self) -> List[float]:
         """
         Get the degree of freedom targets from the controller.

@@ -75,7 +75,7 @@ class Simulator:
         actor, controller = robot.make_actor_and_controller()
         bounding_box = actor.calc_aabb()
 
-        controllerList = [controller for i in range(5)]
+        controllerList = [controller for i in range(1)]
 
         env = Environment(EnvironmentActorController(controllerList))
         env.static_geometries.extend(terrains.flat().static_geometry)
@@ -108,12 +108,39 @@ async def main() -> None:
     rng.seed(5)
 
     body = Body()
+
     body.core.left = ActiveHinge(math.pi / 2.0)
-    body.core.left.attachment = ActiveHinge(math.pi / 2.0)
-    body.core.left.attachment.attachment = Brick(0.0)
+    body.core.left.attachment = Brick(0.0)
+    body.core.left.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.left.attachment.front.attachment = Brick(0.0)
+
     body.core.right = ActiveHinge(math.pi / 2.0)
-    body.core.right.attachment = ActiveHinge(math.pi / 2.0)
-    body.core.right.attachment.attachment = Brick(0.0)
+    body.core.right.attachment = Brick(0.0)
+    body.core.right.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.right.attachment.front.attachment = Brick(0.0)
+
+    body.core.back = ActiveHinge(math.pi / 2.0)
+    body.core.back.attachment = Brick(0.0)
+    body.core.back.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.back.attachment.front.attachment = Brick(0.0)
+
+    body.core.front = ActiveHinge(math.pi / 2.0)
+    body.core.front.attachment = Brick(0.0)
+    body.core.front.attachment.front = ActiveHinge(math.pi / 2.0)
+    body.core.front.attachment.front.attachment = Brick(0.0)
+
+
+    #body.core.right = ActiveHinge(math.pi / 2.0)
+    #body.core.right.attachment = ActiveHinge(math.pi / 2.0)
+    #body.core.right.attachment.attachment = Brick(0.0)
+
+    #body.core.front = ActiveHinge(math.pi / 2.0)
+    #body.core.front.attachment = ActiveHinge(math.pi / 2.0)
+    #body.core.front.attachment.attachment = Brick(0.0)
+
+    #body.core.back = ActiveHinge(math.pi / 2.0)
+    #body.core.back.attachment = ActiveHinge(math.pi / 2.0)
+    #body.core.back.attachment.attachment = Brick(0.0)
     body.finalize()
 
     brain = BrainCpgNetworkNeighbourRandom(rng)

@@ -11,6 +11,7 @@ import revolve2.core.optimization.ea.generic_ea.selection as selection
 import sqlalchemy
 from genotype import Genotype, GenotypeSerializer, crossover, develop, mutate
 from pyrr import Quaternion, Vector3
+import quaternion as qt
 from revolve2.core.database import IncompatibleError
 from revolve2.core.database.serializers import FloatSerializer
 from revolve2.core.optimization import DbId
@@ -52,7 +53,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actor_controllerList = actor_controllerList
 
 
-    def control(self, dt: float, actor_control: ActorControl) -> None:
+    def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
         """
         Control the single actor in the environment using an ActorController.
 
@@ -60,7 +61,19 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_control: Object used to interface with the environment.
         """
 
+        actorState = argList[0]
+        '''
+        #qt.as_rotation_vector(actorState.orientation)
+        if actorState:
+            print(actorState.orientation.angle)
+            wamp
+        '''
+
         for ind, actor in enumerate(self.actor_controllerList):
+            #Find a way to get the angle here
+            #actor.
+
+            actor.passInfo(actorState)
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
@@ -288,7 +301,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(5)]
+            controllerList = [controller for i in range(1)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
@@ -324,12 +337,14 @@ class Optimizer(EAOptimizer[Genotype, float]):
         # TODO simulation can continue slightly passed the defined sim time.
 
         # distance traveled on the xy plane
-        return float(
+        """ return float(
             math.sqrt(
                 (begin_state.position[0] - end_state.position[0]) ** 2
                 + ((begin_state.position[1] - end_state.position[1]) ** 2)
             )
-        )
+        ) """
+    
+        return float(end_state.position[1])
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
         session.add(
