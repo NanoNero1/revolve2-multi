@@ -71,6 +71,7 @@ class CpgActorController(ActorController):
 
         #This scales the joint activation functions to the target angles
         self.findTarAngle()
+        '''
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
 
         LR = "O"
@@ -84,7 +85,7 @@ class CpgActorController(ActorController):
             for j in self._jointsRight:
                 self._state[j] = self._state[j]*scaleD
                 #self._state[j] = 0
-
+        '''
         #if True:
         #    for i in self._jointsLeft:
         #        self._state[i] = 0
@@ -110,9 +111,9 @@ class CpgActorController(ActorController):
             
             #print(self._jointsLeft)
             #print(self._jointsRight)
-            print(f"BAngle %s" % self.bodyA)
-            print(f"TAngle %s" % self.tarA)
-            print(f"L/R %s" % LR)
+            #print(f"BAngle %s" % self.bodyA)
+            #print(f"TAngle %s" % self.tarA)
+            #print(f"L/R %s" % LR)
 
             a=[] 
 
@@ -182,9 +183,23 @@ class CpgActorController(ActorController):
 
         :returns: The dof targets.
         """
+
+        #Dimitri Comment
+        outPuts = self._state[0 : self._num_output_neurons].copy()
+
+        scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
+        if self.tarA < 0:
+            for i in self._jointsLeft:
+                outPuts[i] = outPuts[i]*scaleD
+                #outPuts[i] = 0
+        else:
+            for j in self._jointsRight:
+                outPuts[j] = outPuts[j]*scaleD
+                #outPuts[j] = outPuts[j]*scaleD
+        
         return list(
             np.clip(
-                self._state[0 : self._num_output_neurons],
+                outPuts,
                 a_min=-self._dof_ranges,
                 a_max=self._dof_ranges,
             )
