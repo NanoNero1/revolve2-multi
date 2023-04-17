@@ -57,7 +57,7 @@ class CpgActorController(ActorController):
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
-        self.p = 3
+        self.p = 6
         self.m33 = Matrix33()
         #self.body = body
 

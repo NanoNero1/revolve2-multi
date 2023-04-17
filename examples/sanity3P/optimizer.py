@@ -337,7 +337,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
                 + ((begin_state.position[1] - end_state.position[1]) ** 2)
             )
         ) """
-    
+        print(f"Fitness: %s " % end_state.position[0])
         return float(end_state.position[0])
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
