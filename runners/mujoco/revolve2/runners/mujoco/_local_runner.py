@@ -137,6 +137,7 @@ class LocalRunner(Runner):
             EnvironmentState(0.0, cls._get_actor_states(env_descr, data, model))
         )
 
+        #Main Time Loop for Runner
         while (time := data.time) < simulation_time:
             # do control if it is time
             if time >= last_control_time + control_step:
@@ -144,8 +145,8 @@ class LocalRunner(Runner):
                 control_user = ActorControl()
 
                 #Pass along real time body data to controller
-                actorState = cls._get_actor_states(env_descr, data, model)[0]
-                env_descr.controller.control(control_step, control_user, [actorState])
+                actorState = cls._get_actor_states(env_descr, data, model)
+                env_descr.controller.control(control_step, control_user, actorState)
                 
                 actor_targets = control_user._dof_targets
                 actor_targets.sort(key=lambda t: t[0])

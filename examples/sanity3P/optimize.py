@@ -16,16 +16,16 @@ import os
 async def main() -> None:
     """Run the optimization process."""
     # number of initial mutations for body and brain CPPNWIN networks
-    NUM_INITIAL_MUTATIONS = 20
+    NUM_INITIAL_MUTATIONS = 2
 
     SIMULATION_TIME = 150
     SAMPLING_FREQUENCY = 5
     CONTROL_FREQUENCY = 60
 
     #bara bara bara
-    POPULATION_SIZE = 10
-    OFFSPRING_SIZE = 10
-    NUM_GENERATIONS = 20
+    POPULATION_SIZE = 2
+    OFFSPRING_SIZE = 2
+    NUM_GENERATIONS = 1
 
     logging.basicConfig(
         level=logging.INFO,

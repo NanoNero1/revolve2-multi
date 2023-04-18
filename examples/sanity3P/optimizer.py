@@ -61,13 +61,13 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_control: Object used to interface with the environment.
         """
 
-        actorState = argList[0]
+        actorStates = argList
 
         for ind, actor in enumerate(self.actor_controllerList):
             #Find a way to get the angle here
             #actor.
 
-            actor.passInfo(actorState)
+            actor.passInfo(actorStates[ind])
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
@@ -228,7 +228,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=True)
+        self._runner = LocalRunner(headless=False)
 
     def _select_parents(
         self,
@@ -295,7 +295,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(1)]
+            controllerList = [controller for i in range(2)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
