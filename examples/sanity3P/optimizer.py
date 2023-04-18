@@ -67,9 +67,15 @@ class EnvironmentActorController(EnvironmentController):
             #Find a way to get the angle here
             #actor.
 
-            actor.passInfo(actorStates[ind])
+            actor.passInfo(actorStates[ind],self.get_grid_Tup(actorStates[ind].position))
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
+
+    #Returns a tuple for where the actor is on the grid
+    def get_grid_Tup(self, position):
+        x = math.ceil(position[0] * 2)
+        y = math.ceil(position[1] * 2)
+        return (x, y)
 
 
 

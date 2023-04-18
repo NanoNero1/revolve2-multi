@@ -114,7 +114,7 @@ class CpgActorController(ActorController):
             #print(f"BAngle %s" % self.bodyA)
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
-
+            print(self.gridID)
             a=[] 
 
 
@@ -158,6 +158,7 @@ class CpgActorController(ActorController):
         self.axis = actorState.orientation.axis
         self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[1,0])
         self.bodyPos = actorState.position
+        self.gridID = args[1]
         pass
 
 
