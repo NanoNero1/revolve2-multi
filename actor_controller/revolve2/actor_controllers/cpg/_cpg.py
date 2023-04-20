@@ -114,7 +114,7 @@ class CpgActorController(ActorController):
             #print(f"BAngle %s" % self.bodyA)
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
-            print(self.gridID)
+            #print(self.gridID)
             a=[] 
 
 
@@ -142,7 +142,13 @@ class CpgActorController(ActorController):
         else:
             drct = -1
 
-        return ((math.pi/2.0) + drct*np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
+        #signed_angle = math.atan2(v1_u[0]*v2_u[1]- v1_u[1]*v2_u[0],v1_u[0]*v2_u[0] + v1_u[1]*v2_u[1])
+        return (np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
+        #return signed_angle
+
+    def quat_to_angle(self, q):
+        ang = math.atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
+        return ang
 
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
@@ -156,7 +162,8 @@ class CpgActorController(ActorController):
         ori = actorState.orientation
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
-        self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[1,0])
+        #self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[0,1])
+        self.bodyA = self.quat_to_angle(ori)
         self.bodyPos = actorState.position
         self.gridID = args[1]
         pass
