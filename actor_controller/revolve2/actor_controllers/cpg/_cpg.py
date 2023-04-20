@@ -196,14 +196,14 @@ class CpgActorController(ActorController):
         outPuts = self._state[0 : self._num_output_neurons].copy()
 
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
-        if self.tarA < 0:
+        if self.tarA > 0:
             for i in self._jointsLeft:
                 outPuts[i] = outPuts[i]*scaleD
                 #outPuts[i] = 0
         else:
             for j in self._jointsRight:
                 outPuts[j] = outPuts[j]*scaleD
-                #outPuts[j] = outPuts[j]*scaleD
+                #outPuts[j] = 0
         
         return list(
             np.clip(
