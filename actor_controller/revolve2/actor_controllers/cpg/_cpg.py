@@ -154,7 +154,7 @@ class CpgActorController(ActorController):
         #This will be a neural network but for now its more simple 
         #self.tarA = self.angle_between(self.bodyA,[0,1])
         #self.tarA = -1*self.bodyA
-        self.tarA = -1*self.bodyA
+        self.tarA = -1*self.bodyA - (math.pi/2.0)
         pass
 
     def passInfo(self, *args) -> None:
@@ -165,7 +165,7 @@ class CpgActorController(ActorController):
         #self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[0,1])
         self.bodyA = self.quat_to_angle(ori)
         self.bodyPos = actorState.position
-        self.gridID = args[1]
+        #self.gridID = args[1]
         pass
 
 
