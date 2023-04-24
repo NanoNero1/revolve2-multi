@@ -8,10 +8,14 @@ from revolve2.actor_controller import ActorController
 from revolve2.serialization import SerializeError, StaticData
 import math
 #from revolve2.core.modular_robot import Body
+
+#Dimitri Imports
 import numpy as np
 from datetime import datetime
 #import time
 from pyrr import Quaternion, Matrix33, matrix33, vector
+import neat
+from tensorflow import keras
 
 class CpgActorController(ActorController):
     """
@@ -61,6 +65,32 @@ class CpgActorController(ActorController):
         self.m33 = Matrix33()
         #self.body = body
 
+        #make NN
+        My_model = keras.Sequential([
+            keras.layers.Dense(units=2),
+            keras.layers.Dense(units=3, activation='relu'),
+            keras.layers.Dense(units=2, activation='softmax'),
+            ])
+        print(My_model.predict( np.array( [[0,1],] ) ))
+        '''
+        config_path = os.path.join(local_dir, 'config-feedforward')
+
+        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+        
+        self.reproduction.create_new(config.genome_type,
+                                                           config.genome_config,
+                                                           config.pop_size)
+        g = #?
+        g.configure_new(config.genome_config)
+
+        #Todo: 1-addfile 2-make winner ie init 3-move into actorcontroller
+
+
+
+        self.cognit = neat.nn.FeedForwardNetwork.create(winner, config)
+        '''
     def step(self, dt: float) -> None:
         """
         Step the controller dt seconds forward.
