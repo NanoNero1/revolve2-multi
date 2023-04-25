@@ -145,7 +145,8 @@ class CpgActorController(ActorController):
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
             #print(self.gridID)
-            print(self.model_pred([0,1],self.weights))
+            io = np.ndarray((2,), buffer=np.array([0,1]))
+            print(self.model_pred(io,self.weights))
             a=[] 
 
 
@@ -200,8 +201,8 @@ class CpgActorController(ActorController):
         for weight, bias in weights:
             print(temp)
             print(weight)
-            jah
-            temp = np.dot(temp, weight)+bias
+            temp = np.dot(temp.T, weight.T)+bias
+            print(temp)
             temp = self.np_elu(temp)
         return temp
 
