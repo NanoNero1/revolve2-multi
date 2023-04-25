@@ -66,19 +66,31 @@ class CpgActorController(ActorController):
         #self.body = body
 
         #make NN
+        '''
         My_model = keras.Sequential([
             keras.layers.Dense(units=2),
             keras.layers.Dense(units=3, activation='relu'),
             keras.layers.Dense(units=2, activation='softmax'),
             ])
         print(My_model.predict( np.array( [[0,1],] ) ))
+        config_path = os.path.join(local_dir, 'config-feedforward')
 
-        #3-move into actorcontroller
+        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+        
+        self.reproduction.create_new(config.genome_type,
+                                                           config.genome_config,
+                                                           config.pop_size)
+        g = #?
+        g.configure_new(config.genome_config)
 
-    def controllerInit(self,id,model):
-        self.id = id
-        self.model = model
+        #Todo: 1-addfile 2-make winner ie init 3-move into actorcontroller
 
+
+
+        self.cognit = neat.nn.FeedForwardNetwork.create(winner, config)
+        '''
     def step(self, dt: float) -> None:
         """
         Step the controller dt seconds forward.
@@ -133,7 +145,6 @@ class CpgActorController(ActorController):
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
             #print(self.gridID)
-            print(self.model.predict( np.array( [[0,1],] ) ))
             a=[] 
 
 
@@ -187,6 +198,8 @@ class CpgActorController(ActorController):
         #self.gridID = args[1]
         pass
 
+    def controllerInit(self,id):
+        self.id = id
 
     @staticmethod
     def _rk45(

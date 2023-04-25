@@ -38,6 +38,7 @@ from sqlalchemy.future import select
 
 #Dimitri Imports
 from tensorflow import keras
+import numpy as np
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
 class EnvironmentActorController(EnvironmentController):
@@ -57,17 +58,52 @@ class EnvironmentActorController(EnvironmentController):
 
         self.actorCount = 0
         self.cognitiveList = {}
+        self.modelList = []
 
 
         #Initialize each actor_controller with a NN:
-        for actor in self.actor_controllerList:
+        for actor in range(len(self.actor_controllerList)):
 
+            """
             new_model = keras.Sequential([
             keras.layers.Dense(units=2),
             keras.layers.Dense(units=3, activation='relu'),
             keras.layers.Dense(units=2, activation='softmax'),
             ])
-            self.cognitiveList[self.actorCount] = [self.actorCount,new_model]
+            self.modelList.append("blah")
+            """
+            actor.controllerInit(id)
+            configuration = [2,3,2]
+            self.cognitiveList[self.actorCount] = [self.actorCount,self.new_denseWeights(configuration)]
+
+
+    #Importing existing libraries was buggy, so I'm making my own neural net infrastructure
+    
+    #TO-DO: make smart NN initalization choices
+    def np_elu(self,x):
+        mask = np.where(x<0)
+        x[mask] = np.exp(x[mask])-1
+        return x
+
+
+    def model_pred(self,input, weights):
+        temp = input.copy()
+        for weight, bias in weights:
+            temp = np.dot(temp, weight)+bias
+            temp = np_elu(temp)
+        return temp
+
+    def new_denseWeights(self,config):
+        weights = []
+        biases = []
+        for i in config:
+            weights.append( np.random.uniform(low=-1.0, high=1.0, size=(i,)) )
+            biases.append( np.random.uniform(low=-1.0, high=1.0, size=(1,)) )
+            zip(weights,biases)
+
+    def predAngle(self,id):
+        self.cognitiveList[id][1]
+
 
 
 
