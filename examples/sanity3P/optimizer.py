@@ -37,7 +37,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 
 #Dimitri Imports
-from tensorflow import keras
+#from tensorflow import keras
 import numpy as np
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
@@ -62,7 +62,7 @@ class EnvironmentActorController(EnvironmentController):
 
 
         #Initialize each actor_controller with a NN:
-        for actor in range(len(self.actor_controllerList)):
+        for actor in self.actor_controllerList:
 
             """
             new_model = keras.Sequential([
@@ -72,39 +72,20 @@ class EnvironmentActorController(EnvironmentController):
             ])
             self.modelList.append("blah")
             """
-            actor.controllerInit(id)
             configuration = [2,3,2]
-            self.cognitiveList[self.actorCount] = [self.actorCount,self.new_denseWeights(configuration)]
+            actor.controllerInit(self.actorCount,self.new_denseWeights(configuration))
 
 
     #Importing existing libraries was buggy, so I'm making my own neural net infrastructure
     
     #TO-DO: make smart NN initalization choices
-    def np_elu(self,x):
-        mask = np.where(x<0)
-        x[mask] = np.exp(x[mask])-1
-        return x
-
-
-    def model_pred(self,input, weights):
-        temp = input.copy()
-        for weight, bias in weights:
-            temp = np.dot(temp, weight)+bias
-            temp = np_elu(temp)
-        return temp
-
     def new_denseWeights(self,config):
         weights = []
         biases = []
         for i in config:
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(i,)) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(1,)) )
-            zip(weights,biases)
-
-    def predAngle(self,id):
-        self.cognitiveList[id][1]
-
-
+        return zip(weights,biases)
 
 
     def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:

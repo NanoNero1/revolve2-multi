@@ -15,7 +15,7 @@ from datetime import datetime
 #import time
 from pyrr import Quaternion, Matrix33, matrix33, vector
 import neat
-from tensorflow import keras
+#from tensorflow import keras
 
 class CpgActorController(ActorController):
     """
@@ -145,6 +145,7 @@ class CpgActorController(ActorController):
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
             #print(self.gridID)
+            print(self.model_pred([0,1],self.weights))
             a=[] 
 
 
@@ -187,6 +188,25 @@ class CpgActorController(ActorController):
         self.tarA = -1*self.bodyA - (math.pi/2.0)
         pass
 
+    def np_elu(self,x):
+        mask = np.where(x<0)
+        x[mask] = np.exp(x[mask])-1
+        return x
+
+
+    def model_pred(self,input, weights):
+        temp = input.copy()
+        
+        for weight, bias in weights:
+            print(temp)
+            print(weight)
+            jah
+            temp = np.dot(temp, weight)+bias
+            temp = self.np_elu(temp)
+        return temp
+
+
+
     def passInfo(self, *args) -> None:
         actorState = args[0]
         ori = actorState.orientation
@@ -198,8 +218,9 @@ class CpgActorController(ActorController):
         #self.gridID = args[1]
         pass
 
-    def controllerInit(self,id):
+    def controllerInit(self,id,weight_mat):
         self.id = id
+        self.weights = weight_mat
 
     @staticmethod
     def _rk45(
