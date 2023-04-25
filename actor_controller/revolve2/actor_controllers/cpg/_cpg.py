@@ -72,25 +72,13 @@ class CpgActorController(ActorController):
             keras.layers.Dense(units=2, activation='softmax'),
             ])
         print(My_model.predict( np.array( [[0,1],] ) ))
-        '''
-        config_path = os.path.join(local_dir, 'config-feedforward')
 
-        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_path)
-        
-        self.reproduction.create_new(config.genome_type,
-                                                           config.genome_config,
-                                                           config.pop_size)
-        g = #?
-        g.configure_new(config.genome_config)
+        #3-move into actorcontroller
 
-        #Todo: 1-addfile 2-make winner ie init 3-move into actorcontroller
+    def controllerInit(self,id,model):
+        self.id = id
+        self.model = model
 
-
-
-        self.cognit = neat.nn.FeedForwardNetwork.create(winner, config)
-        '''
     def step(self, dt: float) -> None:
         """
         Step the controller dt seconds forward.
@@ -145,6 +133,7 @@ class CpgActorController(ActorController):
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
             #print(self.gridID)
+            print(self.model.predict( np.array( [[0,1],] ) ))
             a=[] 
 
 

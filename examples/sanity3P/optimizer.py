@@ -36,6 +36,9 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 
+#Dimitri Imports
+from tensorflow import keras
+
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
 class EnvironmentActorController(EnvironmentController):
     """An environment controller for an environment with a single actor that uses a provided ActorController."""
@@ -51,6 +54,21 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_controller: The actor controller to use for multiple actors in the environment.
         """
         self.actor_controllerList = actor_controllerList
+
+        self.actorCount = 0
+        self.cognitiveList = {}
+
+
+        #Initialize each actor_controller with a NN:
+        for actor in self.actor_controllerList:
+
+            new_model = keras.Sequential([
+            keras.layers.Dense(units=2),
+            keras.layers.Dense(units=3, activation='relu'),
+            keras.layers.Dense(units=2, activation='softmax'),
+            ])
+            self.cognitiveList[self.actorCount] = [self.actorCount,new_model]
+
 
 
     def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
