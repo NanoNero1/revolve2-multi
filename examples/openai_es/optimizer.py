@@ -206,6 +206,8 @@ class Optimizer(OpenaiESOptimizer):
                 weight_matrix,
                 dof_ranges,
             )
+
+            #in here I can actually pass the inits maybe? also give enemy vs prey
             controller = brain.make_controller(self._body, self._dof_ids)
 
             bounding_box = self._actor.calc_aabb()

@@ -199,10 +199,10 @@ class CpgActorController(ActorController):
         temp = input.copy()
         
         for weight, bias in weights:
-            print(temp)
-            print(weight)
-            temp = np.dot(temp.T, weight.T)+bias
-            print(temp)
+            #print(temp)
+            #print(weight)
+            temp = np.dot(temp, weight)+bias
+            #print(temp)
             temp = self.np_elu(temp)
         return temp
 

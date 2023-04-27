@@ -82,9 +82,9 @@ class EnvironmentActorController(EnvironmentController):
     def new_denseWeights(self,config):
         weights = []
         biases = []
-        for i in config:
-            weights.append( np.random.uniform(low=-1.0, high=1.0, size=(i,)) )
-            biases.append( np.random.uniform(low=-1.0, high=1.0, size=(1,)) )
+        for ind in range(len(config)-1):
+            weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
+            biases.append( np.random.uniform(low=-1.0, high=1.0, size=(ind+1,)) )
         return zip(weights,biases)
 
 
