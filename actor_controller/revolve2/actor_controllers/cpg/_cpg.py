@@ -219,9 +219,10 @@ class CpgActorController(ActorController):
         #self.gridID = args[1]
         pass
 
-    def controllerInit(self,id,weight_mat):
+    def controllerInit(self,id,weight_mat,preyPred):
         self.id = id
         self.weights = weight_mat
+        self.preyPred = preyPred
 
     @staticmethod
     def _rk45(
