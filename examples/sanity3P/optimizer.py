@@ -131,11 +131,10 @@ class EnvironmentActorController(EnvironmentController):
 
     #Returns a tuple for where the actor is on the grid
     def get_grid_Tup(self, position):
-        x = round(position[0] * 2)
-        y = round(position[1] * 2)
-        #return (x, y)
-        #return position
-        return [position[0],position[1]]
+        #NEED FIX: I dont super understand why its messing up with values other than 10
+        x = round(position[0] * 10)
+        y = round(position[1] * 10)
+        return (x, y)
     
     #Get the oldest genotypes
     def bestGenos(self):
