@@ -63,6 +63,7 @@ class CpgActorController(ActorController):
         self.tarA = 0
         self.p = 6
         self.m33 = Matrix33()
+        self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
 
     def step(self, dt: float) -> None:
         """
@@ -85,9 +86,10 @@ class CpgActorController(ActorController):
             #print(f"L/R %s" % LR)
 
             #print(self.gridID)
-            
-            io = np.ndarray((2,), buffer=np.array([0,1]))
-            print(self.model_pred(io,self.weights))
+
+            #io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
+            #print(self.model_pred(self.io,self.weights))
+            self.model_pred(self.io,self.weights)
             a=[] 
 
 

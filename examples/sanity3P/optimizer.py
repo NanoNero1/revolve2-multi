@@ -63,7 +63,7 @@ class EnvironmentActorController(EnvironmentController):
         for ind,actor in enumerate(self.actor_controllerList):
 
 
-            configuration = [2,3,2]
+            configuration = [2,3,3]
             actor.controllerInit(self.actorCount,
                                  self.new_denseWeights(configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
@@ -77,8 +77,10 @@ class EnvironmentActorController(EnvironmentController):
         biases = []
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
-            biases.append( np.random.uniform(low=-1.0, high=1.0, size=(ind+1,)) )
-        return zip(weights,biases)
+            biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
+        #I didn't know this, but using zip in python 3
+        #only works once, hence "list"
+        return list(zip(weights,biases))
 
 
     def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
@@ -328,7 +330,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(1)]
+            controllerList = [controller for i in range(2)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
