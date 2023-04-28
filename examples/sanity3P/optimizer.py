@@ -96,7 +96,10 @@ class EnvironmentActorController(EnvironmentController):
         #Passing info to the actor and asking it to control
         for ind, actor in enumerate(self.actor_controllerList):
 
-            actor.passInfo(actorStates[ind],self.get_grid_Tup(actorStates[ind].position))
+            actor.passInfo(actorStates[ind],
+                           self.get_grid_Tup(actorStates[ind].position),
+                           (actorStates[0].position)[:1]
+                           )
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
