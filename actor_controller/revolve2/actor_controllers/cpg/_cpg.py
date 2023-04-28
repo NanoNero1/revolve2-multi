@@ -88,9 +88,9 @@ class CpgActorController(ActorController):
             #print(f"TAngle %s" % self.tarA)
             #print(f"L/R %s" % LR)
 
-            #print(self.gridID)
+            print(self.gridID)
 
-            self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
+            #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
             a=[] 
 
 

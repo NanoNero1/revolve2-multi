@@ -69,6 +69,9 @@ class EnvironmentActorController(EnvironmentController):
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
 
+    ###
+    # Neural Network Functions
+    ###
 
     #Importing existing libraries was buggy, so I'm making my own neural net infrastructure
     #TO-DO: make smart NN initalization choices
@@ -81,6 +84,25 @@ class EnvironmentActorController(EnvironmentController):
         #I didn't know this, but using zip in python 3
         #only works once, hence "list"
         return list(zip(weights,biases))
+    
+    #Allows us to make new mutated weight matrices from parents
+    #alpha controls how harsh the mutations are
+    def mutateWeights(self,weights,config,alpha=0.1):
+        #Technically you could find the matrix size implicitly (and would be better design)
+        mutWeights = weights.copy()
+        for ind in range(len(config)-1):
+            mutWeights[ind][0] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
+            mutWeights[ind][1] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
+        return mutWeights
+    
+    #Combines two parents' genotpye to make a child genotype
+    def crossover(self,parent1,parent2):
+        crossWeights = []
+        return crossWeights
+
+
+
+
 
 
     def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
@@ -103,11 +125,26 @@ class EnvironmentActorController(EnvironmentController):
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
+    ###
+    #Informational Functions
+    ###
+
     #Returns a tuple for where the actor is on the grid
     def get_grid_Tup(self, position):
-        x = math.ceil(position[0] * 2)
-        y = math.ceil(position[1] * 2)
-        return (x, y)
+        x = round(position[0] * 2)
+        y = round(position[1] * 2)
+        #return (x, y)
+        #return position
+        return [position[0],position[1]]
+    
+    #Get the oldest genotypes
+    def bestGenos(self):
+        self.bestGenos = ([actor.timeBorn for actor in self.actor_controllerList ]).sort()
+
+
+
+    
+
 
 
 
@@ -333,7 +370,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(2)]
+            controllerList = [controller for i in range(1)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
