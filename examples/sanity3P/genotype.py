@@ -303,14 +303,10 @@ def develop(genotype: Genotype) -> ModularRobot:
 
     body.core.left = ActiveHinge(0 / 2.0)
     body.core.left.attachment = Brick(0.0)
-    #body.core.left.attachment.front = ActiveHinge(math.pi / 2.0)
-    #body.core.left.attachment.front.attachment = Brick(0.0)
-
+    
     body.core.right = ActiveHinge(0/ 2.0)
     body.core.right.attachment = Brick(0.0)
-    #body.core.right.attachment.front = ActiveHinge(math.pi / 2.0)
-    #body.core.right.attachment.front.attachment = Brick(0.0)
-    
+
     body.core.back = ActiveHinge(math.pi/ 2.0)
     body.core.back.attachment = Brick(math.pi / 2.0)
 
@@ -323,17 +319,7 @@ def develop(genotype: Genotype) -> ModularRobot:
 
     body.core.back.attachment.front.attachment.right = ActiveHinge(0)
     body.core.back.attachment.front.attachment.right.attachment = Brick(0.0)
-    ''' these are for the Spider Body
-    body.core.back = ActiveHinge(math.pi / 2.0)
-    body.core.back.attachment = Brick(0.0)
-    body.core.back.attachment.front = ActiveHinge(math.pi / 2.0)
-    body.core.back.attachment.front.attachment = Brick(0.0)
-
-    body.core.front = ActiveHinge(math.pi / 2.0)
-    body.core.front.attachment = Brick(0.0)
-    body.core.front.attachment.front = ActiveHinge(math.pi / 2.0)
-    body.core.front.attachment.front.attachment = Brick(0.0)
-    '''
+    
     body.finalize()
     
     brain = brain_develop(genotype.brain, body)

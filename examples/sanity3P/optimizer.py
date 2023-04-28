@@ -44,8 +44,6 @@ import numpy as np
 class EnvironmentActorController(EnvironmentController):
     """An environment controller for an environment with a single actor that uses a provided ActorController."""
 
-    #actor_controller: ActorController
-    #actor_controller2: ActorController
     actor_controllerList: List[ActorController]
 
     def __init__(self, actor_controllerList: List[ActorController]) -> None:

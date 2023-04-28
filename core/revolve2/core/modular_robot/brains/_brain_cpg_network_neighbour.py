@@ -59,8 +59,6 @@ class BrainCpgNetworkNeighbour(Brain, ABC):
         dof_ranges = cpg_network_structure.make_uniform_dof_ranges(1.0)
         #[]
         # Find the left and right joint sets (and corresponding cpg indexs)
-        #jointsLeft = [hinge.id for hinge in [joint for joint in active_hinges if body.grid_position(joint)[0] < 0 ]]
-        #jointsRight = [hinge.id for hinge in [joint for joint in active_hinges if body.grid_position(joint)[0] > 0 ]]
         jointsLeft = []
         jointsRight = []
         for ind, hinge in enumerate(active_hinges):
