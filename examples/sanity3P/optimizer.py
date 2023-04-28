@@ -98,7 +98,7 @@ class EnvironmentActorController(EnvironmentController):
 
             actor.passInfo(actorStates[ind],
                            self.get_grid_Tup(actorStates[ind].position),
-                           (actorStates[0].position)[:1]
+                           (actorStates[0].position)[:2]
                            )
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())

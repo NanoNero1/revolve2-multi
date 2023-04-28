@@ -64,6 +64,9 @@ class CpgActorController(ActorController):
         self.p = 6
         self.m33 = Matrix33()
         self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
+        self.getInfo = [0,0]
+
+        self.timeBorn = datetime.now()
 
     def step(self, dt: float) -> None:
         """
@@ -87,9 +90,7 @@ class CpgActorController(ActorController):
 
             #print(self.gridID)
 
-            #io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
-            #print(self.model_pred(self.io,self.weights))
-            self.model_pred(self.io,self.weights)
+            self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
             a=[] 
 
 
@@ -130,6 +131,8 @@ class CpgActorController(ActorController):
         for weight, bias in weights:
             temp = np.dot(temp, weight)+bias
             temp = self.np_elu(temp)
+
+        print(temp)
         return temp
 
     #Actor recieves real-time information here
@@ -141,7 +144,11 @@ class CpgActorController(ActorController):
         #self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[0,1])
         self.bodyA = self.quat_to_angle(ori)
         self.bodyPos = actorState.position
-        #self.gridID = args[1]
+        self.gridID = args[1]
+        self.getInfo = args[2]
+        #print(self.getInfo)
+        #shucks
+
         pass
 
     #Initial instructions from the environment controller
