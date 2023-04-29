@@ -74,6 +74,7 @@ class EnvironmentActorController(EnvironmentController):
 
 
         print([actor.id for actor in self.actor_controllerList])
+        print('above list pls')
         self.updPreyPred()
         print(self.preyList)
         print(self.predList)
@@ -175,8 +176,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 1)
-        y = round(position[1] * 1)
+        x = round(position[0] * 0.1)
+        y = round(position[1] * 0.1)
         return (x, y)
     
     #Get the oldest genotypes
@@ -420,7 +421,11 @@ class Optimizer(EAOptimizer[Genotype, float]):
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
-            controllerList = [controller for i in range(4)]
+            #controllerList = [controller for i in range(4)]
+            controllerList = []
+            for i in range(4):
+                actor, controller = develop(genotype).make_actor_and_controller()
+                controllerList.append(controller)
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
@@ -431,7 +436,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         Vector3(
                             [
                                 0.0,
-                                0.0 + i,
+                                0.0 + i*0.5,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
                             ]
                         ),
