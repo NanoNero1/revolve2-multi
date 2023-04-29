@@ -39,6 +39,7 @@ from sqlalchemy.future import select
 #Dimitri Imports
 #from tensorflow import keras
 import numpy as np
+from datetime import datetime
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
 class EnvironmentActorController(EnvironmentController):
@@ -62,17 +63,20 @@ class EnvironmentActorController(EnvironmentController):
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         #Initialize each actor_controller with a NN:
         for ind,actor in enumerate(self.actor_controllerList):
-
-
-            
-            actor.controllerInit(self.actorCount,
+            if ind <= cutIndex:
+                print("prey")
+            actor.controllerInit(ind,
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-
+            print(self.actorCount)
             self.actorCount += 1
 
+
+        print([actor.id for actor in self.actor_controllerList])
         self.updPreyPred()
+        print(self.preyList)
+        print(self.predList)
 
     ###
     # Neural Network Functions
@@ -127,7 +131,14 @@ class EnvironmentActorController(EnvironmentController):
                            )
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
-    
+
+        #Handy dandy little loop for debugging
+        now = datetime.now()
+
+        if now.microsecond % 20 < 1:
+            print(self.predList)
+
+
     #Handles the mechanics of who gets caught and who dies out
     def updateGrid(self):
         self.updPreyPred()
@@ -164,8 +175,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 10)
-        y = round(position[1] * 10)
+        x = round(position[0] * 1)
+        y = round(position[1] * 1)
         return (x, y)
     
     #Get the oldest genotypes
@@ -174,8 +185,8 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates which are prey and which are predators
     def updPreyPred(self):
-        self.preyList = [ actor.id for actor in self.actor_controllerLidst if actor.preyPred == "prey"]
-        self.predList = [ actor.id for actor in self.actor_controllerLidst if actor.preyPred == "pred"]
+        self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
+        self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
 
 
     ##
@@ -408,7 +419,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(2)]
+            #Number of actors found here
+            controllerList = [controller for i in range(4)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
@@ -419,8 +431,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         Vector3(
                             [
                                 0.0,
-                                0.0,
-                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i,
+                                0.0 + i,
+                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
                             ]
                         ),
                         Quaternion(),
