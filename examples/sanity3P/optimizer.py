@@ -57,17 +57,22 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
+        self.configuration = [2,3,3]
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         #Initialize each actor_controller with a NN:
         for ind,actor in enumerate(self.actor_controllerList):
 
 
-            configuration = [2,3,3]
+            
             actor.controllerInit(self.actorCount,
-                                 self.new_denseWeights(configuration),
+                                 self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
+
+            self.actorCount += 1
+
+        self.updPreyPred()
 
     ###
     # Neural Network Functions
@@ -100,11 +105,9 @@ class EnvironmentActorController(EnvironmentController):
         crossWeights = []
         return crossWeights
 
-
-
-
-
-
+    ###
+    #Control Section: This is the place where the cake is put together
+    ###
     def control(self, dt: float, actor_control: ActorControl, argList: List) -> None:
         """
         Control the single actor in the environment using an ActorController.
@@ -113,24 +116,53 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_control: Object used to interface with the environment.
         """
 
-        actorStates = argList
+        self.actorStates = argList
 
         #Passing info to the actor and asking it to control
         for ind, actor in enumerate(self.actor_controllerList):
 
-            actor.passInfo(actorStates[ind],
-                           self.get_grid_Tup(actorStates[ind].position),
-                           (actorStates[0].position)[:2]
+            actor.passInfo(self.actorStates[ind],
+                           self.get_grid_Tup(ind),
+                           (self.actorStates[0].position)[:2]
                            )
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
+    
+    #Handles the mechanics of who gets caught and who dies out
+    def updateGrid(self):
+        self.updPreyPred()
+
+        preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+        for pred in self.predList:
+            predGID = (self.actor_controllerList[pred]).gridID
+            caught = preyGrid.index(predGID)
+            if caught:
+                self.becomePred(caught)
+
+    ###
+    #Mechanics: this is where actors have their states changed according to the 
+    #experiment setup ideas
+    ###
+        
+
+    def becomePred(self,id):
+        actor = self.actor_controllerList[id]
+        actor.preyPred = "pred"
+
+        bestPred = self.new_denseWeights(self.configuration)
+        actor.weights = self.mutateWeights(bestPred,self.configuration)
+        baaad
+        #Do something to setup new position??
+
+
 
     ###
     #Informational Functions
     ###
 
     #Returns a tuple for where the actor is on the grid
-    def get_grid_Tup(self, position):
+    def get_grid_Tup(self, id):
+        position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
         x = round(position[0] * 10)
         y = round(position[1] * 10)
@@ -140,6 +172,13 @@ class EnvironmentActorController(EnvironmentController):
     def bestGenos(self):
         self.bestGenos = ([actor.timeBorn for actor in self.actor_controllerList ]).sort()
 
+    #Updates which are prey and which are predators
+    def updPreyPred(self):
+        self.preyList = [ actor.id for actor in self.actor_controllerLidst if actor.preyPred == "prey"]
+        self.predList = [ actor.id for actor in self.actor_controllerLidst if actor.preyPred == "pred"]
+
+
+    ##
 
 
     
@@ -369,7 +408,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
         for genotype in genotypes:
             actor, controller = develop(genotype).make_actor_and_controller()
-            controllerList = [controller for i in range(1)]
+            controllerList = [controller for i in range(2)]
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
