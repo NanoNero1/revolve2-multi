@@ -2,7 +2,7 @@
 
 import math
 import pickle
-from random import Random
+from random import Random, randint
 from typing import List, Tuple
 
 import multineat
@@ -105,7 +105,15 @@ class EnvironmentActorController(EnvironmentController):
     #Combines two parents' genotpye to make a child genotype
     #STILL HAVE TO IMPLEMENT! i.e. take a random index for each layer and crossovera
     def crossover(self,parent1,parent2):
+        parent1W = parent1.copy()
+        parent2W = parent1.copy()
         crossWeights = []
+
+        for ind in range(len(config)-1):
+            cutIndex = randint(1,len)
+            crossWeights[0][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
+            crossWeights[1][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
+        return None
         return crossWeights
 
     ###
@@ -181,9 +189,11 @@ class EnvironmentActorController(EnvironmentController):
         actor = self.actor_controllerList[self.preyList[id]]
         actor.preyPred = "pred"
 
-        bestPred = self.new_denseWeights(self.configuration)
+        #bestPred = self.new_denseWeights(self.configuration)
+        bestPred = self.bestGenotype("pred")
         actor.weights = self.mutateWeights(bestPred,self.configuration)
         #Do something to setup new position??
+
 
 
 
@@ -200,8 +210,23 @@ class EnvironmentActorController(EnvironmentController):
         return (x, y)
     
     #Get the oldest genotypes
-    def bestGenos(self):
-        self.bestGenos = ([actor.timeBorn for actor in self.actor_controllerList ]).sort()
+    def bestGenotype(self,preyPred):
+        #Update the predator and prey lists before checking, its probably uneccessary though
+        self.updPreyPred()
+        
+        preyGenos = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
+        predGenos = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
+        if preyPred == "prey":
+            maxTime = min(preyGenos)
+            preyID = preyGenos.index(maxTime)
+            genoID = self.preyList[preyID]
+            
+        else:
+            maxTime = max(predGenos)
+            predID = predGenos.index(maxTime)
+            genoID = self.predList[predID]
+
+        return (self.actor_controllerList[genoID]).weights
 
     #Updates which are prey and which are predators
     def updPreyPred(self):

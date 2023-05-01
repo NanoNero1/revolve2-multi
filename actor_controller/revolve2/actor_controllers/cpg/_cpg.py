@@ -66,7 +66,7 @@ class CpgActorController(ActorController):
         self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
         self.getInfo = [0,0]
 
-        self.timeBorn = datetime.now()
+        self.timeBorn = datetime.now().timestamp()
 
     def step(self, dt: float) -> None:
         """
