@@ -93,17 +93,18 @@ class EnvironmentActorController(EnvironmentController):
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
         #I didn't know this, but using zip in python 3
         #only works once, hence "list"
-        return list(zip(weights,biases))
+        #return list(zip(weights,biases))
+        return np.array([weights, biases]) 
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
     def mutateWeights(self,weights,config,alpha=0.1):
         #Technically you could find the matrix size implicitly (and would be better design)
-        mutWeights = list(weights.copy())
-        print(mutWeights)
+        mutWeights = weights.copy()
+        #print(mutWeights)
         for ind in range(len(config)-1):
-            mutWeights[ind][0] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
-            mutWeights[ind][1] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
+            mutWeights[0][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
+            mutWeights[1][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
         return mutWeights
     
     #Combines two parents' genotpye to make a child genotype
@@ -171,9 +172,8 @@ class EnvironmentActorController(EnvironmentController):
         actor.preyPred = "pred"
 
         bestPred = self.new_denseWeights(self.configuration)
-        #Fix the mutation function, it has a bug
-        #actor.weights = self.mutateWeights(bestPred,self.configuration)
-        actor.weights = self.new_denseWeights(self.configuration)
+        actor.weights = self.mutateWeights(bestPred,self.configuration)
+        #actor.weights = self.new_denseWeights(self.configuration)
         #Do something to setup new position??
 
 

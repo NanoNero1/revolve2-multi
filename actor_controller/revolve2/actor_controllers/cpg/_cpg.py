@@ -128,7 +128,7 @@ class CpgActorController(ActorController):
     #Calculates the NN ouput manually with numpy
     def model_pred(self,input, weights):
         temp = input.copy()
-        for weight, bias in weights:
+        for weight, bias in zip(weights[0],weights[1]):
             temp = np.dot(temp, weight)+bias
             temp = self.np_elu(temp)
 
