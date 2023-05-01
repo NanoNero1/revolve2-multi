@@ -63,6 +63,7 @@ class EnvironmentActorController(EnvironmentController):
         self.lastTime = float(datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
+        
         #Initialize each actor_controller with a NN:
         for ind,actor in enumerate(self.actor_controllerList):
             actor.controllerInit(ind,
@@ -86,9 +87,6 @@ class EnvironmentActorController(EnvironmentController):
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        #I didn't know this, but using zip in python 3
-        #only works once, hence "list"
-        #return list(zip(weights,biases))
         return np.array([weights, biases], dtype=object) 
     
     #Allows us to make new mutated weight matrices from parents
@@ -96,7 +94,6 @@ class EnvironmentActorController(EnvironmentController):
     def mutateWeights(self,weights,config,alpha=0.1):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
-        #print(mutWeights)
         for ind in range(len(config)-1):
             mutWeights[0][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
             mutWeights[1][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
@@ -141,33 +138,36 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updateGrid()
 
-        #Handy dandy little loop for debugging
+        ## Time Based Section - doesnt update on every loop
         now = datetime.now()
 
-        if now.microsecond % 20 < 1:
-            #print(self.predList)
-            #print(self.preyList)
-            a=0
-
-
-        #Actual Time Loop
-        now = datetime.now()
-
+        #float not needed?
         self.currTime = float(datetime.now().timestamp())
-        
-        #print(self.currTime)
-        #print(self.currtime)
         if self.currTime - self.lastTime > 0.5:
             print(self.currTime - self.lastTime)
-            self.lastTime = float(self.currTime)
+            self.lastTime = float(self.currTime)    
 
-        #self.lastTime = float(self.currTime)
+    ###
+    #Mechanics: this is where actors have their states changed according to the 
+    #experiment setup ideas
+    ###
+        
+    #Makes the brain switch from predator to prey and vice versa
+    def becomePred(self,id):
+        actor = self.actor_controllerList[self.preyList[id]]
+        actor.preyPred = "pred"
+
+        #bestPred = self.new_denseWeights(self.configuration)
+        bestPred = self.bestGenotype("pred")
+        actor.weights = self.mutateWeights(bestPred,self.configuration)
+        #Do something to setup new position??
 
 
     #Handles the mechanics of who gets caught and who dies out
     def updateGrid(self):
         self.updPreyPred()
 
+        #Handles Death of Prey
         preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
 
         for pred in self.predList:
@@ -179,20 +179,8 @@ class EnvironmentActorController(EnvironmentController):
             if caught != None:
                 self.becomePred(caught)
 
-    ###
-    #Mechanics: this is where actors have their states changed according to the 
-    #experiment setup ideas
-    ###
-        
+        #Handles Death of Predator
 
-    def becomePred(self,id):
-        actor = self.actor_controllerList[self.preyList[id]]
-        actor.preyPred = "pred"
-
-        #bestPred = self.new_denseWeights(self.configuration)
-        bestPred = self.bestGenotype("pred")
-        actor.weights = self.mutateWeights(bestPred,self.configuration)
-        #Do something to setup new position??
 
 
 
