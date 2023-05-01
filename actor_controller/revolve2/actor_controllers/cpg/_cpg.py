@@ -67,6 +67,7 @@ class CpgActorController(ActorController):
         self.getInfo = [0,0]
 
         self.timeBorn = datetime.now().timestamp()
+        self.lastTime = self.timeBorn
 
     def step(self, dt: float) -> None:
         """
@@ -79,10 +80,10 @@ class CpgActorController(ActorController):
         #Updates our target angle
         self.findTarAngle()
 
-        #Time condition that helps for debugging prints
-        now = datetime.now()
-
-        if now.microsecond % 20 < 1:
+        #Time Loop that helps for debugging prints
+        #         
+        self.currTime = (datetime.now().timestamp())
+        if float(self.currTime - self.lastTime) > 0.5:
             #print(f"Body Pos: %s" % self.bodyPos)
             #print(f"BAngle %s" % self.bodyA)
             #print(f"TAngle %s" % self.tarA)
@@ -91,7 +92,7 @@ class CpgActorController(ActorController):
             #print(self.gridID)
 
             #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
-            a=[] 
+            self.lastTime = self.currTime
 
 
     ##Calculating angles
@@ -99,6 +100,7 @@ class CpgActorController(ActorController):
         """ Returns the unit vector of the vector.  """
         return vector / np.linalg.norm(vector)
 
+    #I dont use this function anymore (and it's direction blind), but it might be useful in the future
     def angle_between(self, v1, v2):
         """ Returns the angle in radians between vectors 'v1' and 'v2'::
             >>> angle_between((1, 0, 0), (-1, 0, 0))
@@ -110,6 +112,7 @@ class CpgActorController(ActorController):
         #signed_angle = math.atan2(v1_u[0]*v2_u[1]- v1_u[1]*v2_u[0],v1_u[0]*v2_u[0] + v1_u[1]*v2_u[1])
         return (np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
+    #This is the correct way to to get the angle (pitch) from a quaternion
     def quat_to_angle(self, q):
         ang = math.atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
         return ang
@@ -141,14 +144,12 @@ class CpgActorController(ActorController):
         ori = actorState.orientation
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
-        #self.bodyA = self.angle_between(np.array(self.m33.c2[:2]),[0,1])
+
         self.bodyA = self.quat_to_angle(ori)
         self.bodyPos = actorState.position
+        
         self.gridID = args[1]
         self.getInfo = args[2]
-        #print(self.getInfo)
-        #shucks
-
         pass
 
     #Initial instructions from the environment controller
@@ -180,7 +181,7 @@ class CpgActorController(ActorController):
         :returns: The dof targets.
         """
 
-        #Dimitri Comment
+        #Copying means we are not referencing, we REALLY dont want to change self._state
         outPuts = self._state[0 : self._num_output_neurons].copy()
 
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p

@@ -60,7 +60,7 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [2,3,3]
 
-        self.lastTime = float(datetime.now().timestamp())
+        self.lastTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
@@ -139,13 +139,13 @@ class EnvironmentActorController(EnvironmentController):
         self.updateGrid()
 
         ## Time Based Section - doesnt update on every loop
-        now = datetime.now()
-
-        #float not needed?
-        self.currTime = float(datetime.now().timestamp())
-        if self.currTime - self.lastTime > 0.5:
-            print(self.currTime - self.lastTime)
-            self.lastTime = float(self.currTime)    
+        self.currTime = (datetime.now().timestamp())
+        if float(self.currTime - self.lastTime) > 0.5:
+            #print(self.currTime - self.lastTime)
+            print('predlist')
+            print(self.predList)
+            print(self.preyList)
+            self.lastTime = (self.currTime)    
 
     ###
     #Mechanics: this is where actors have their states changed according to the 
@@ -153,12 +153,19 @@ class EnvironmentActorController(EnvironmentController):
     ###
         
     #Makes the brain switch from predator to prey and vice versa
-    def becomePred(self,id):
-        actor = self.actor_controllerList[self.preyList[id]]
-        actor.preyPred = "pred"
+    def switchBrain(self,id,preyPred):
+        if preyPred == "prey":
+            actor = self.actor_controllerList[self.preyList[id]]
+            actor.preyPred = "pred"
+            bestPred = self.bestGenotype("pred")
+        else:
+            actor = self.actor_controllerList[self.predList[id]]
+            actor.preyPred = "prey"
+            bestPred = self.bestGenotype("prey")
+
 
         #bestPred = self.new_denseWeights(self.configuration)
-        bestPred = self.bestGenotype("pred")
+        
         actor.weights = self.mutateWeights(bestPred,self.configuration)
         #Do something to setup new position??
 
@@ -168,7 +175,10 @@ class EnvironmentActorController(EnvironmentController):
         self.updPreyPred()
 
         #Handles Death of Prey
+
+        #All information retrieval needs to happen before changes are made
         preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+        predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
 
         for pred in self.predList:
             predGID = (self.actor_controllerList[pred]).gridID
@@ -177,9 +187,20 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 caught = None
             if caught != None:
-                self.becomePred(caught)
+                print(caught)
+                self.switchBrain(caught,"prey")
 
         #Handles Death of Predator
+        minTime = min(predTimes)
+        predID = predTimes.index(minTime)
+            #print(pred.timeBorn)
+            #print(self.lastTime)
+            #print(pred.timeBorn - self.lastTime)
+
+        #I don't know why but caught seems to activate despite no prey?
+        if float(self.lastTime - minTime) > 4.0 and False:
+                self.switchBrain(predID,"pred")
+
 
 
 
@@ -202,16 +223,16 @@ class EnvironmentActorController(EnvironmentController):
         #Update the predator and prey lists before checking, its probably uneccessary though
         self.updPreyPred()
         
-        preyGenos = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
-        predGenos = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
+        preyTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
+        predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
         if preyPred == "prey":
-            maxTime = min(preyGenos)
-            preyID = preyGenos.index(maxTime)
+            maxTime = min(preyTimes)
+            preyID = preyTimes.index(maxTime)
             genoID = self.preyList[preyID]
             
         else:
-            maxTime = max(predGenos)
-            predID = predGenos.index(maxTime)
+            maxTime = max(predTimes)
+            predID = predTimes.index(maxTime)
             genoID = self.predList[predID]
 
         return (self.actor_controllerList[genoID]).weights
