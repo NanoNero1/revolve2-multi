@@ -99,13 +99,15 @@ class EnvironmentActorController(EnvironmentController):
     #alpha controls how harsh the mutations are
     def mutateWeights(self,weights,config,alpha=0.1):
         #Technically you could find the matrix size implicitly (and would be better design)
-        mutWeights = weights.copy()
+        mutWeights = list(weights.copy())
+        print(mutWeights)
         for ind in range(len(config)-1):
             mutWeights[ind][0] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
             mutWeights[ind][1] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
         return mutWeights
     
     #Combines two parents' genotpye to make a child genotype
+    #STILL HAVE TO IMPLEMENT! i.e. take a random index for each layer and crossovera
     def crossover(self,parent1,parent2):
         crossWeights = []
         return crossWeights
@@ -133,11 +135,14 @@ class EnvironmentActorController(EnvironmentController):
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
+        self.updateGrid()
+
         #Handy dandy little loop for debugging
         now = datetime.now()
 
         if now.microsecond % 20 < 1:
             print(self.predList)
+            print(self.preyList)
 
 
     #Handles the mechanics of who gets caught and who dies out
@@ -145,10 +150,14 @@ class EnvironmentActorController(EnvironmentController):
         self.updPreyPred()
 
         preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+
         for pred in self.predList:
             predGID = (self.actor_controllerList[pred]).gridID
-            caught = preyGrid.index(predGID)
-            if caught:
+            if predGID in preyGrid:
+                caught = preyGrid.index(predGID)
+            else:
+                caught = None
+            if caught != None:
                 self.becomePred(caught)
 
     ###
@@ -158,12 +167,13 @@ class EnvironmentActorController(EnvironmentController):
         
 
     def becomePred(self,id):
-        actor = self.actor_controllerList[id]
+        actor = self.actor_controllerList[self.preyList[id]]
         actor.preyPred = "pred"
 
         bestPred = self.new_denseWeights(self.configuration)
-        actor.weights = self.mutateWeights(bestPred,self.configuration)
-        baaad
+        #Fix the mutation function, it has a bug
+        #actor.weights = self.mutateWeights(bestPred,self.configuration)
+        actor.weights = self.new_denseWeights(self.configuration)
         #Do something to setup new position??
 
 
@@ -176,8 +186,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 0.1)
-        y = round(position[1] * 0.1)
+        x = round(position[0] * 0.5)
+        y = round(position[1] * 0.5)
         return (x, y)
     
     #Get the oldest genotypes
