@@ -60,24 +60,19 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [2,3,3]
 
+        self.lastTime = float(datetime.now().timestamp())
+
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         #Initialize each actor_controller with a NN:
         for ind,actor in enumerate(self.actor_controllerList):
-            if ind <= cutIndex:
-                print("prey")
             actor.controllerInit(ind,
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-            print(self.actorCount)
             self.actorCount += 1
 
 
-        print([actor.id for actor in self.actor_controllerList])
-        print('above list pls')
         self.updPreyPred()
-        print(self.preyList)
-        print(self.predList)
 
     ###
     # Neural Network Functions
@@ -94,7 +89,7 @@ class EnvironmentActorController(EnvironmentController):
         #I didn't know this, but using zip in python 3
         #only works once, hence "list"
         #return list(zip(weights,biases))
-        return np.array([weights, biases]) 
+        return np.array([weights, biases], dtype=object) 
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -142,8 +137,23 @@ class EnvironmentActorController(EnvironmentController):
         now = datetime.now()
 
         if now.microsecond % 20 < 1:
-            print(self.predList)
-            print(self.preyList)
+            #print(self.predList)
+            #print(self.preyList)
+            a=0
+
+
+        #Actual Time Loop
+        now = datetime.now()
+
+        self.currTime = float(datetime.now().timestamp())
+        
+        #print(self.currTime)
+        #print(self.currtime)
+        if self.currTime - self.lastTime > 0.5:
+            print(self.currTime - self.lastTime)
+            self.lastTime = float(self.currTime)
+
+        #self.lastTime = float(self.currTime)
 
 
     #Handles the mechanics of who gets caught and who dies out
@@ -173,7 +183,6 @@ class EnvironmentActorController(EnvironmentController):
 
         bestPred = self.new_denseWeights(self.configuration)
         actor.weights = self.mutateWeights(bestPred,self.configuration)
-        #actor.weights = self.new_denseWeights(self.configuration)
         #Do something to setup new position??
 
 
