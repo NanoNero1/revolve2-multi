@@ -68,6 +68,7 @@ class CpgActorController(ActorController):
 
         self.timeBorn = datetime.now().timestamp()
         self.lastTime = self.timeBorn
+        self.tag = 0
 
     def step(self, dt: float) -> None:
         """
@@ -92,7 +93,8 @@ class CpgActorController(ActorController):
             #print(self.gridID)
 
             #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
-            self.lastTime = self.currTime
+            self.lastTime = self.currTime;
+
 
 
     ##Calculating angles
@@ -135,8 +137,17 @@ class CpgActorController(ActorController):
             temp = np.dot(temp, weight)+bias
             temp = self.np_elu(temp)
 
-        print(temp)
+        #print(temp)
         return temp
+    
+    def makeCognitiveOutput(self,cogInfo):
+        #There might be some reference issue here, check me
+        output = list(self.model_pred(np.ndarray((2,), buffer=np.array(cogInfo)),self.weights)).copy()
+        self.tarA = output[0]
+
+        #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
+        self.tag = output[1]
+        print(f"this is tag %s " % self.tag)
 
     #Actor recieves real-time information here
     def passInfo(self, *args) -> None:
@@ -149,7 +160,7 @@ class CpgActorController(ActorController):
         self.bodyPos = actorState.position
         
         self.gridID = args[1]
-        self.getInfo = args[2]
+        #self.getInfo = args[2]
         pass
 
     #Initial instructions from the environment controller

@@ -127,11 +127,11 @@ class EnvironmentActorController(EnvironmentController):
         self.actorStates = argList
 
         #Passing info to the actor and asking it to control
+        #Only pass info that is needed on every tick
         for ind, actor in enumerate(self.actor_controllerList):
 
             actor.passInfo(self.actorStates[ind],
                            self.get_grid_Tup(ind),
-                           (self.actorStates[0].position)[:2]
                            )
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
@@ -142,10 +142,11 @@ class EnvironmentActorController(EnvironmentController):
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 0.5:
             #print(self.currTime - self.lastTime)
-            print('predlist')
-            print(self.predList)
-            print(self.preyList)
-            self.lastTime = (self.currTime)    
+            #print('predlist')
+            #print(self.predList)
+            #print(self.preyList)
+            self.cognitiveActors(self.actorStates)
+            self.lastTime = (self.currTime)   
 
     ###
     #Mechanics: this is where actors have their states changed according to the 
@@ -187,7 +188,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 caught = None
             if caught != None:
-                print(caught)
+                #print(caught)
                 self.switchBrain(caught,"prey")
 
         #Handles Death of Predator
@@ -200,6 +201,18 @@ class EnvironmentActorController(EnvironmentController):
         #I don't know why but caught seems to activate despite no prey?
         if float(self.lastTime - minTime) > 4.0 and False:
                 self.switchBrain(predID,"pred")
+    
+    def cognitiveActors(self,actorStates):
+        #actorDistList = [actor.position]
+        for ind,actor in enumerate(self.actor_controllerList):
+            posList = [other.bodyPos for other in self.actor_controllerList]
+            distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
+            smallest = min(distList)
+            closestActor = self.actor_controllerList[distList.index(smallest)]
+
+            actor.makeCognitiveOutput(closestActor.bodyPos)
+
+            #(self.actorStates[0].position)[:2]
 
 
 
@@ -241,6 +254,17 @@ class EnvironmentActorController(EnvironmentController):
     def updPreyPred(self):
         self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
         self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
+
+    #Finds the distance between two actors, return a super large distance if same position
+    #so that an actor "ignores" itself in terms of distance
+    def actorDist(self,pos1,pos2):
+        x = pos1[0] - pos2[0]
+        y = pos1[1] - pos2[1]
+        dist = math.sqrt( (x**2 + y**2) )
+        if dist > 0.01:
+            return dist
+        else:
+            return 10000000
 
 
     ##
