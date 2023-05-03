@@ -99,6 +99,8 @@ class EnvironmentActorController(EnvironmentController):
             # write multiple rows
             writer.writerows(data)
 
+        self.pushCollectData = []
+
     ###
     # Neural Network Functions
     ###
@@ -172,10 +174,19 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.predList)
             #print(self.preyList)
             self.cognitiveActors(self.actorStates)
+            self.writeMyCSV()
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
-        if float(self.currTime - self.lastTime) > 0.5:
+        if float(self.currTime - self.lastTime) > 0.3:
+            raAct = randint(0,6)
+            actor = self.actor_controllerList[raAct]
+
+            datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
+            #Normally, having a dynamically sized array especially with tons of data is a bad idea,
+            #Luckily it gets emptied out fairly regularly so the ammortization isnt super harmful
+            self.pushCollectData.append(datas)
+            
 
 
     ###
@@ -312,7 +323,20 @@ class EnvironmentActorController(EnvironmentController):
         return angle
 
 
-    ##
+    ###
+    # Utility Functions
+    ###
+
+    def writeMyCSV(self):
+        with open('countries.csv', 'a', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+
+            # write multiple rows
+            writer.writerows(self.pushCollectData)
+
+        
+
+
 
 
     
