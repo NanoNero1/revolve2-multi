@@ -267,6 +267,15 @@ class EnvironmentActorController(EnvironmentController):
 
             #(self.actorStates[0].position)[:2]
 
+    #Get the LifeSpan of 
+    def predatorlifeSpan(self,pred):
+        predsLeft = len(self.predList)
+        
+        if predsLeft > 1:
+            #currently set to a linear scale
+            return 4.0  + (20-predsLeft)
+        else:
+            return 
 
     ###
     #Informational Functions
@@ -333,6 +342,8 @@ class EnvironmentActorController(EnvironmentController):
 
             # write multiple rows
             writer.writerows(self.pushCollectData)
+
+    
 
         
 
