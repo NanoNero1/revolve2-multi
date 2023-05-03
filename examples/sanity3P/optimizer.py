@@ -40,6 +40,8 @@ from sqlalchemy.future import select
 #from tensorflow import keras
 import numpy as np
 from datetime import datetime
+from scipy.stats import qmc
+
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
 class EnvironmentActorController(EnvironmentController):
@@ -58,7 +60,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,3,3]
+        self.configuration = [4,3,2]
 
         self.lastTime = (datetime.now().timestamp())
 
@@ -87,7 +89,7 @@ class EnvironmentActorController(EnvironmentController):
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        return np.array([weights, biases], dtype=object) 
+        return [ np.array(weights), np.array(biases)]
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -100,18 +102,20 @@ class EnvironmentActorController(EnvironmentController):
         return mutWeights
     
     #Combines two parents' genotpye to make a child genotype
-    #STILL HAVE TO IMPLEMENT! i.e. take a random index for each layer and crossovera
+    #STILL HAVE TO TEST!
     def crossover(self,parent1,parent2):
         parent1W = parent1.copy()
         parent2W = parent1.copy()
         crossWeights = []
+        crossBiases = []
 
-        for ind in range(len(config)-1):
-            cutIndex = randint(1,len)
-            crossWeights[0][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
-            crossWeights[1][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
-        return None
-        return crossWeights
+        for ind in range(len(self.configuration)-1):
+            #Crossover Point at a random interval in the next layer
+            cutIndex = randint(1,self.configuration[ind+1]-1) 
+
+            crossWeights.append(np.concatenate(parent1W[0][ind][:cutIndex],parent2W[0][ind][cutIndex:]))
+            crossBiases.append(np.concatenate(parent1W[1][ind][:cutIndex],parent2W[1][ind][cutIndex:]))
+        return [crossWeights, crossBiases]
 
     ###
     #Control Section: This is the place where the cake is put together
@@ -210,13 +214,17 @@ class EnvironmentActorController(EnvironmentController):
             smallest = min(distList)
             closestActor = self.actor_controllerList[distList.index(smallest)]
 
-            actor.makeCognitiveOutput(closestActor.bodyPos)
+
+            
+            angle = self.angleBetween(actor.bodyPos,closestActor.bodyPos)
+            dumbo = 2
+            #This is where we can pass any cognitive information, 
+            # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
+            #tag = randint(0,9)
+            #print(tag)
+            actor.makeCognitiveOutput(angle,smallest,closestActor.tag,dumbo)
 
             #(self.actorStates[0].position)[:2]
-
-
-
-
 
 
     ###
@@ -265,6 +273,13 @@ class EnvironmentActorController(EnvironmentController):
             return dist
         else:
             return 10000000
+        
+    #This is the way to calculate angle WITH direction
+    def angleBetween(self,v1,v2):
+        dot = np.dot(v1,v2)                     #Dot Product
+        det = (v1[0]*v2[1] - v2[0]*v1[1])       # Determinant
+        angle = math.atan2(det, dot)            # atan2(y, x) or atan2(sin, cos)
+        return angle
 
 
     ##
@@ -500,21 +515,29 @@ class Optimizer(EAOptimizer[Genotype, float]):
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
             controllerList = []
-            for i in range(4):
+            for i in range(8):
                 actor, controller = develop(genotype).make_actor_and_controller()
                 controllerList.append(controller)
             bounding_box = actor.calc_aabb()
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
+
+            #rng = np.random.default_rng()
+            radius = 0.2
+            engine = qmc.PoissonDisk(d=2, radius=radius)
+            sample = engine.random(8)
+
+            print(sample)
+
             for i in range(len(controllerList)):
                 env.actors.append(
                     PosedActor(
                         actor,
                         Vector3(
                             [
-                                0.0,
-                                0.0 + i*0.5,
-                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
+                                sample[i][0]*3,
+                                sample[i][1]*3,
+                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*1,
                             ]
                         ),
                         Quaternion(),
