@@ -41,6 +41,10 @@ from sqlalchemy.future import select
 import numpy as np
 from datetime import datetime
 from scipy.stats import qmc
+import csv
+from revolve2.core.database import open_async_database_sqlite
+from revolve2.core.database.serializers import DbFloat
+from revolve2.core.optimization.ea.generic_ea import DbEAOptimizerIndividual
 
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
@@ -76,6 +80,24 @@ class EnvironmentActorController(EnvironmentController):
 
 
         self.updPreyPred()
+
+        header = ['id', 'predprey', 'tag', 'position']
+        data = [
+            ['Albania', 28748, 'AL', 'ALB'],
+            ['Algeria', 2381741, 'DZ', 'DZA'],
+            ['American Samoa', 199, 'AS', 'ASM'],
+            ['Andorra', 468, 'AD', 'AND'],
+            ['Angola', 1246700, 'AO', 'AGO']
+                ]
+
+        with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+
+            # write the header
+            writer.writerow(header)
+
+            # write multiple rows
+            writer.writerows(data)
 
     ###
     # Neural Network Functions
@@ -152,6 +174,10 @@ class EnvironmentActorController(EnvironmentController):
             self.cognitiveActors(self.actorStates)
             self.lastTime = (self.currTime)   
 
+        #Loop for data collection
+        if float(self.currTime - self.lastTime) > 0.5:
+
+
     ###
     #Mechanics: this is where actors have their states changed according to the 
     #experiment setup ideas
@@ -185,6 +211,7 @@ class EnvironmentActorController(EnvironmentController):
         preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
         predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
 
+
         for pred in self.predList:
             predGID = (self.actor_controllerList[pred]).gridID
             if predGID in preyGrid:
@@ -194,6 +221,9 @@ class EnvironmentActorController(EnvironmentController):
             if caught != None:
                 #print(caught)
                 self.switchBrain(caught,"prey")
+                #Hopefully this fixes it
+                self.updPreyPred()
+                preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
 
         #Handles Death of Predator
         minTime = min(predTimes)
@@ -511,6 +541,27 @@ class Optimizer(EAOptimizer[Genotype, float]):
         )
 
         for genotype in genotypes:
+
+
+            db = open_async_database_sqlite("./walkDatabase")
+            async with AsyncSession(db) as session:
+                best_individual = (
+                    await session.execute(
+                        select(DbEAOptimizerIndividual, DbFloat)
+                        .filter(DbEAOptimizerIndividual.fitness_id == DbFloat.id)
+                        .order_by(DbFloat.value.desc()))
+                ).first()
+
+                assert best_individual is not None
+
+                print(f"fitness: {best_individual[1].value}")
+
+                genotype = (
+                    await GenotypeSerializer.from_database(
+                        session, [best_individual[0].genotype_id]
+                    )           
+                )[0]
+
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
