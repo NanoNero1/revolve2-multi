@@ -156,7 +156,7 @@ class CpgActorController(ActorController):
 
         #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
         self.tag = output[1]
-        print(f"this is tag %s " % self.tag)
+        #print(f"this is tag %s " % self.tag)
 
     #Actor recieves real-time information here
     def passInfo(self, *args) -> None:

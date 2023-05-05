@@ -175,6 +175,8 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.preyList)
             self.cognitiveActors(self.actorStates)
             self.writeMyCSV()
+            print(f"prey: %s" % self.preyList)
+            print(f"pred: %s" % self.predList)
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
@@ -196,6 +198,7 @@ class EnvironmentActorController(EnvironmentController):
         
     #Makes the brain switch from predator to prey and vice versa
     def switchBrain(self,id,preyPred):
+        print("change")
         if preyPred == "prey":
             actor = self.actor_controllerList[self.preyList[id]]
             actor.preyPred = "pred"
@@ -209,6 +212,8 @@ class EnvironmentActorController(EnvironmentController):
         #bestPred = self.new_denseWeights(self.configuration)
         
         actor.weights = self.mutateWeights(bestPred,self.configuration)
+        actor.timeBorn = datetime.now()
+        self.updPreyPred()
         #Do something to setup new position??
 
 
@@ -222,8 +227,10 @@ class EnvironmentActorController(EnvironmentController):
         preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
         predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
 
-
+        caught = None
         for pred in self.predList:
+            if caught != None:
+                break
             predGID = (self.actor_controllerList[pred]).gridID
             if predGID in preyGrid:
                 caught = preyGrid.index(predGID)
@@ -244,7 +251,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(pred.timeBorn - self.lastTime)
 
         #I don't know why but caught seems to activate despite no prey?
-        if float(self.lastTime - minTime) > 4.0 and False:
+        if float(self.lastTime - minTime) > 4.0 and True:
                 self.switchBrain(predID,"pred")
     
     def cognitiveActors(self,actorStates):
@@ -591,7 +598,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
                 print(f"fitness: {best_individual[1].value}")
 
-                genotype = (
+                genotypem = (
                     await GenotypeSerializer.from_database(
                         session, [best_individual[0].genotype_id]
                     )           
