@@ -86,7 +86,7 @@ class EnvironmentActorController(EnvironmentController):
 
             self.actorCount += 1
 
-        print(self.actFrame)
+        #print(self.actFrame)
 
 
         self.updPreyPred()
@@ -185,8 +185,8 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.preyList)
             self.cognitiveActors(self.actorStates)
             self.writeMyCSV()
-            print(f"prey: %s" % self.preyList)
-            print(f"pred: %s" % self.predList)
+            print(f"prey: %s" % self.preyList.index)
+            print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[6])
             self.lastTime = (self.currTime)   
 
@@ -209,23 +209,37 @@ class EnvironmentActorController(EnvironmentController):
         
     #Makes the brain switch from predator to prey and vice versa
     def switchBrain(self,id):
-        #print("change")
+        print("change")
         actor = self.actor_controllerList[id]
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
             actor.preyPred = "pred"
             bestPred = self.bestGenotype("pred")
+
+            #Update the actor dataframe
+            self.actFrame.loc[id,"preyPred"] = "pred"
         else:
             #actor = self.actor_controllerList[self.predList[id]]
             actor.preyPred = "prey"
             bestPred = self.bestGenotype("prey")
 
+            #Update the actor dataframe
+            self.actFrame.loc[id,"preyPred"] = "prey"
 
         #bestPred = self.new_denseWeights(self.configuration)
         
         actor.weights = self.mutateWeights(bestPred,self.configuration)
-        actor.timeBorn = datetime.now().timestamp()
+        itsNow = datetime.now().timestamp()
+        actor.timeBorn = itsNow
+
+        #Update the actor dataframe's time
+        self.actFrame.loc[id,"timeBorn"] = itsNow
+
+        
+
         self.updPreyPred()
+        print(f"preyZO: %s" % self.preyList.index)
+        print(f"predZO: %s" % self.predList.index)
         #Do something to setup new position??
 
 
@@ -250,7 +264,8 @@ class EnvironmentActorController(EnvironmentController):
                 caught = (self.preyList).index[preyGrid.index(predGID)]
             else:
                 caught = None
-            if caught != None:
+            if caught != None and False:
+                dumbo
                 #print(caught)
                 self.switchBrain(caught)
                 #Hopefully this fixes it
@@ -267,9 +282,11 @@ class EnvironmentActorController(EnvironmentController):
             #print(pred.timeBorn - self.lastTime)
 
         #I don't know why but caught seems to activate despite no prey?
-        if float(self.lastTime - minTime) > 4.0 and True:
+        if float(self.lastTime - minTime) > self.predatorlifeSpan() + 4.0 and True:
+                #print(wenthere)
                 self.switchBrain(predID)
     
+    #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
         #actorDistList = [actor.position]
         for ind,actor in enumerate(self.actor_controllerList):
@@ -291,14 +308,14 @@ class EnvironmentActorController(EnvironmentController):
             #(self.actorStates[0].position)[:2]
 
     #Get the LifeSpan of 
-    def predatorlifeSpan(self,pred):
+    def predatorlifeSpan(self):
         predsLeft = len(self.predList)
         
         if predsLeft > 1:
             #currently set to a linear scale
             return 4.0  + (20-predsLeft)
         else:
-            return 
+            return 1000000000
 
     ###
     #Informational Functions
@@ -374,7 +391,7 @@ class EnvironmentActorController(EnvironmentController):
             writer.writerows(self.pushCollectData)
 
     #Updates the actor dataframe
-    def updateDataFrame(self):
+    def updateActFrame(self):
         a=0
 
     
