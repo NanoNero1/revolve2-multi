@@ -68,7 +68,7 @@ class EnvironmentActorController(EnvironmentController):
         self.configuration = [4,3,2]
 
         #This list is for accessing all the actors in a dataframe
-        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred'])
+        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn'])
         self.actFrame.set_index('id')
 
         self.lastTime = (datetime.now().timestamp())
@@ -81,7 +81,7 @@ class EnvironmentActorController(EnvironmentController):
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-            list_row = [ind,actor,actor.preyPred]
+            list_row = [ind,actor,actor.preyPred,actor.timeBorn]
             self.actFrame.loc[len(self.actFrame)] = list_row
 
             self.actorCount += 1
@@ -187,7 +187,7 @@ class EnvironmentActorController(EnvironmentController):
             self.writeMyCSV()
             print(f"prey: %s" % self.preyList)
             print(f"pred: %s" % self.predList)
-            print(self.actFrame.iloc[6])
+            #print(self.actFrame.iloc[6])
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
@@ -208,14 +208,15 @@ class EnvironmentActorController(EnvironmentController):
     ###
         
     #Makes the brain switch from predator to prey and vice versa
-    def switchBrain(self,id,preyPred):
+    def switchBrain(self,id):
         #print("change")
-        if preyPred == "prey":
-            actor = self.actor_controllerList[self.preyList[id]]
+        actor = self.actor_controllerList[id]
+        if actor.preyPred == "prey":
+            #actor = self.actor_controllerList[self.preyList[id]]
             actor.preyPred = "pred"
             bestPred = self.bestGenotype("pred")
         else:
-            actor = self.actor_controllerList[self.predList[id]]
+            #actor = self.actor_controllerList[self.predList[id]]
             actor.preyPred = "prey"
             bestPred = self.bestGenotype("prey")
 
@@ -235,35 +236,39 @@ class EnvironmentActorController(EnvironmentController):
         #Handles Death of Prey
 
         #All information retrieval needs to happen before changes are made
-        preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
-        predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
-
+        #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+        preyGrid = [actor.gridID for actor in self.preyList["actor"]]
+        #predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
+        
         caught = None
-        for pred in self.predList:
+        for pred in self.predList["actor"]:
             if caught != None:
                 break
-            predGID = (self.actor_controllerList[pred]).gridID
+            #predGID = (self.actor_controllerList[pred]).gridID
+            predGID = pred.gridID
             if predGID in preyGrid:
-                caught = preyGrid.index(predGID)
+                caught = (self.preyList).index[preyGrid.index(predGID)]
             else:
                 caught = None
             if caught != None:
                 #print(caught)
-                self.switchBrain(caught,"prey")
+                self.switchBrain(caught)
                 #Hopefully this fixes it
                 self.updPreyPred()
-                preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+                preyGrid = [actor.gridID for actor in self.preyList["actor"]]
+                #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
 
         #Handles Death of Predator
-        minTime = min(predTimes)
-        predID = predTimes.index(minTime)
+        minTime = min(self.predList["timeBorn"])
+        #predID = predTimes.index(minTime)
+        predID = self.predList["timeBorn"].idxmin()
             #print(pred.timeBorn)
             #print(self.lastTime)
             #print(pred.timeBorn - self.lastTime)
 
         #I don't know why but caught seems to activate despite no prey?
         if float(self.lastTime - minTime) > 4.0 and True:
-                self.switchBrain(predID,"pred")
+                self.switchBrain(predID)
     
     def cognitiveActors(self,actorStates):
         #actorDistList = [actor.position]
@@ -312,24 +317,29 @@ class EnvironmentActorController(EnvironmentController):
         #Update the predator and prey lists before checking, its probably uneccessary though
         self.updPreyPred()
         
-        preyTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
-        predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
+        #actorMe
+        #preyTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
+        #predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
+        #preyTimes = self.preyList["timeBorn"]
         if preyPred == "prey":
-            maxTime = min(preyTimes)
-            preyID = preyTimes.index(maxTime)
-            genoID = self.preyList[preyID]
+            #maxTime = min(preyTimes)
+            #preyID = preyTimes.index(maxTime)
+            #genoID = self.preyList[preyID]
+            genoID = self.preyList['timeBorn'].idxmin()
             
         else:
-            maxTime = max(predTimes)
-            predID = predTimes.index(maxTime)
-            genoID = self.predList[predID]
+            #maxTime = max(predTimes)
+            #predID = predTimes.index(maxTime)
+            #genoID = self.predList[predID]
+            genoID = self.predList['timeBorn'].idxmin()
 
         return (self.actor_controllerList[genoID]).weights
 
     #Updates which are prey and which are predators
     def updPreyPred(self):
-        self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
-        self.predList = pd.Series(self.actFrame.query("preyPred=='pred'")["id"])
+        #self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
+        self.preyList = self.actFrame.query("preyPred=='prey'")
+        self.predList = self.actFrame.query("preyPred=='pred'")
         #print(self.predList)
         #self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
 
@@ -362,6 +372,10 @@ class EnvironmentActorController(EnvironmentController):
 
             # write multiple rows
             writer.writerows(self.pushCollectData)
+
+    #Updates the actor dataframe
+    def updateDataFrame(self):
+        a=0
 
     
 
