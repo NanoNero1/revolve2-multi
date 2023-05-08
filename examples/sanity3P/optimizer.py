@@ -45,6 +45,7 @@ import csv
 from revolve2.core.database import open_async_database_sqlite
 from revolve2.core.database.serializers import DbFloat
 from revolve2.core.optimization.ea.generic_ea import DbEAOptimizerIndividual
+import pandas as pd
 
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
@@ -66,6 +67,10 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [4,3,2]
 
+        #This list is for accessing all the actors in a dataframe
+        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred'])
+        self.actFrame.set_index('id')
+
         self.lastTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
@@ -76,7 +81,12 @@ class EnvironmentActorController(EnvironmentController):
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
+            list_row = [ind,actor,actor.preyPred]
+            self.actFrame.loc[len(self.actFrame)] = list_row
+
             self.actorCount += 1
+
+        print(self.actFrame)
 
 
         self.updPreyPred()
@@ -177,6 +187,7 @@ class EnvironmentActorController(EnvironmentController):
             self.writeMyCSV()
             print(f"prey: %s" % self.preyList)
             print(f"pred: %s" % self.predList)
+            print(self.actFrame.iloc[6])
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
@@ -198,7 +209,7 @@ class EnvironmentActorController(EnvironmentController):
         
     #Makes the brain switch from predator to prey and vice versa
     def switchBrain(self,id,preyPred):
-        print("change")
+        #print("change")
         if preyPred == "prey":
             actor = self.actor_controllerList[self.preyList[id]]
             actor.preyPred = "pred"
@@ -212,7 +223,7 @@ class EnvironmentActorController(EnvironmentController):
         #bestPred = self.new_denseWeights(self.configuration)
         
         actor.weights = self.mutateWeights(bestPred,self.configuration)
-        actor.timeBorn = datetime.now()
+        actor.timeBorn = datetime.now().timestamp()
         self.updPreyPred()
         #Do something to setup new position??
 
@@ -318,7 +329,9 @@ class EnvironmentActorController(EnvironmentController):
     #Updates which are prey and which are predators
     def updPreyPred(self):
         self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
-        self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
+        self.predList = pd.Series(self.actFrame.query("preyPred=='pred'")["id"])
+        #print(self.predList)
+        #self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
 
     #Finds the distance between two actors, return a super large distance if same position
     #so that an actor "ignores" itself in terms of distance
