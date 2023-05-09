@@ -70,6 +70,7 @@ class CpgActorController(ActorController):
         self.timeBorn = datetime.now().timestamp()
         self.lastTime = self.timeBorn
         self.tag = 0
+        self.lastKiller = None
 
     def step(self, dt: float) -> None:
         """

@@ -68,7 +68,7 @@ class EnvironmentActorController(EnvironmentController):
         self.configuration = [4,3,2]
 
         #This list is for accessing all the actors in a dataframe
-        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn'])
+        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','gridID','lastKiller'])
         self.actFrame.set_index('id')
 
         self.lastTime = (datetime.now().timestamp())
@@ -81,7 +81,7 @@ class EnvironmentActorController(EnvironmentController):
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-            list_row = [ind,actor,actor.preyPred,actor.timeBorn]
+            list_row = [ind,actor,actor.preyPred,actor.timeBorn,(0,0),actor.lastKiller]
             self.actFrame.loc[len(self.actFrame)] = list_row
 
             self.actorCount += 1
@@ -245,33 +245,40 @@ class EnvironmentActorController(EnvironmentController):
 
     #Handles the mechanics of who gets caught and who dies out
     def updateGrid(self):
+        self.updateActFrame()
         self.updPreyPred()
 
         #Handles Death of Prey
 
         #All information retrieval needs to happen before changes are made
         #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
-        preyGrid = [actor.gridID for actor in self.preyList["actor"]]
+        #preyGrid = [actor.gridID for actor in self.preyList["actor"]]
         #predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
         
         caught = None
+        pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None:
+            if caught != None or len(self.preyList == 0):
                 break
+            caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
+            caught = caughtList.index[0] if len(caughtList) > 0 else None
             #predGID = (self.actor_controllerList[pred]).gridID
-            predGID = pred.gridID
-            if predGID in preyGrid:
-                caught = (self.preyList).index[preyGrid.index(predGID)]
-            else:
-                caught = None
-            if caught != None and False:
-                dumbo
+            #if pred.gridID in preyGrid:
+            #    caught = (self.preyList).index[preyGrid.index(predGID)]
+            #else:
+            #    caught = None
+            if caught != None:
+                print(f"caught: %s " % caught)
+                #dumbo
                 #print(caught)
                 self.switchBrain(caught)
                 #Hopefully this fixes it
+                self.actFrame.loc[caught,"lastKiller"] = pred.id
                 self.updPreyPred()
-                preyGrid = [actor.gridID for actor in self.preyList["actor"]]
+                #preyGrid = [actor.gridID for actor in self.preyList["actor"]]
                 #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
+            else:
+                lol = 0
 
         #Handles Death of Predator
         minTime = min(self.predList["timeBorn"])
@@ -392,14 +399,25 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
-        a=0
+        #UDATE: gridID, 
+        #for actor in self.actor_controllerList:
+        #    break
+        #    self.actFrame.loc[actor.id,"gridID"] = actor.gridID
+        
+        #Pandas doesnt like the above, not sure why
+        self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     
 
         
-
-
-
+###     ###     ###     ###     ###     ###     ###     ###     ###
+###     ###     ###     ###     ###     ###     ###     ###     ###
+###################################################################
+###################################################################
+######################THE GREAT WALL OF CODE#######################
+###################################################################
+###################################################################
+###################################################################
 
     
 
