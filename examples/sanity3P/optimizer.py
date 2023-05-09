@@ -185,14 +185,14 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.preyList)
             self.cognitiveActors(self.actorStates)
             self.writeMyCSV()
-            print(f"prey: %s" % self.preyList.index)
-            print(f"pred: %s" % self.predList.index)
-            #print(self.actFrame.iloc[6])
+            #print(f"prey: %s" % self.preyList.index)
+            #print(f"pred: %s" % self.predList.index)
+            print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
         if float(self.currTime - self.lastTime) > 0.3:
-            raAct = randint(0,6)
+            raAct = randint(0,0)
             actor = self.actor_controllerList[raAct]
 
             datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
@@ -238,10 +238,6 @@ class EnvironmentActorController(EnvironmentController):
         
 
         self.updPreyPred()
-        print(f"preyZO: %s" % self.preyList.index)
-        print(f"predZO: %s" % self.predList.index)
-        #Do something to setup new position??
-
 
     #Handles the mechanics of who gets caught and who dies out
     def updateGrid(self):
@@ -258,7 +254,7 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None or len(self.preyList == 0):
+            if caught != None or len(self.preyList < 2):
                 break
             caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
             caught = caughtList.index[0] if len(caughtList) > 0 else None
@@ -281,17 +277,18 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        minTime = min(self.predList["timeBorn"])
-        #predID = predTimes.index(minTime)
-        predID = self.predList["timeBorn"].idxmin()
-            #print(pred.timeBorn)
-            #print(self.lastTime)
-            #print(pred.timeBorn - self.lastTime)
+        if len(self.predList) > 0:
+            minTime = min(self.predList["timeBorn"])
+            #predID = predTimes.index(minTime)
+            predID = self.predList["timeBorn"].idxmin()
+                #print(pred.timeBorn)
+                #print(self.lastTime)
+                #print(pred.timeBorn - self.lastTime)
 
-        #I don't know why but caught seems to activate despite no prey?
-        if float(self.lastTime - minTime) > self.predatorlifeSpan() + 4.0 and True:
-                #print(wenthere)
-                self.switchBrain(predID)
+            #I don't know why but caught seems to activate despite no prey?
+            if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
+                    #print(wenthere)
+                    self.switchBrain(predID)
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
@@ -332,8 +329,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 0.5)
-        y = round(position[1] * 0.5)
+        x = round(position[0] * 5)
+        y = round(position[1] * 5)
         return (x, y)
     
     #Get the oldest genotypes
@@ -670,7 +667,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
             controllerList = []
-            for i in range(8):
+            for i in range(1):
                 actor, controller = develop(genotype).make_actor_and_controller()
                 controllerList.append(controller)
             bounding_box = actor.calc_aabb()
