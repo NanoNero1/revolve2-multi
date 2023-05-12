@@ -691,8 +691,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                sample[i][0]*3,
-                                sample[i][1]*3,
+                                sample[i][0]*3*0,
+                                sample[i][1]*3*0,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*1,
                             ]
                         ),
