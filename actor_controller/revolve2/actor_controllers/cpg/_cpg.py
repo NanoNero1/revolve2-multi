@@ -81,7 +81,7 @@ class CpgActorController(ActorController):
         self._state = self._rk45(self._state, self._weight_matrix, dt)
 
         #Updates our target angle
-        self.findTarAngle()
+        #self.findTarAngle()
 
         #Time Loop that helps for debugging prints
         #         
@@ -123,7 +123,7 @@ class CpgActorController(ActorController):
 
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
-        self.tarA = -1*self.bodyA - (math.pi/2.0)*0
+        self.tarA = -1*self.bodyA - (math.pi/4.0)*1
         pass
 
     #Applies the ELU activation function for the NN
@@ -153,7 +153,7 @@ class CpgActorController(ActorController):
         #There might be some reference issue here, check me
         #output = list(self.model_pred(np.ndarray((3,), buffer=np.array([ang,dist,tag])),self.weights)).copy()
         output = list(self.model_pred(np.array([ang,dist,tag,dumbo]),self.weights)).copy()
-        #self.tarA = output[0]
+        self.tarA = output[0]
 
         #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
         self.tag = output[1]

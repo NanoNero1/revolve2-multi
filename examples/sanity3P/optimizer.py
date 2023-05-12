@@ -178,19 +178,19 @@ class EnvironmentActorController(EnvironmentController):
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
-        ##self.updateGrid()
+        self.updateGrid()
 
         ## Time Based Section - doesnt update on every loop
         self.currTime = (datetime.now().timestamp())
-        if float(self.currTime - self.lastTime) > 0.5:
+        if float(self.currTime - self.lastTime) > 2:
             #print(self.currTime - self.lastTime)
             #print('predlist')
             #print(self.predList)
             #print(self.preyList)
-            ##self.cognitiveActors(self.actorStates)
+            self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
-            #print(f"prey: %s" % self.preyList.index)
-            #print(f"pred: %s" % self.predList.index)
+            print(f"prey: %s" % self.preyList.index)
+            print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
@@ -258,8 +258,12 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None or len(self.preyList < 2):
+            #print(type(self.preyList))
+            #print(self.preyList)
+            #print()
+            if caught != None or len(self.preyList.index) < 2:
                 break
+            #print("caught?")
             caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
             caught = caughtList.index[0] if len(caughtList) > 0 else None
             #predGID = (self.actor_controllerList[pred]).gridID
@@ -333,8 +337,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 5)
-        y = round(position[1] * 5)
+        x = round(position[0] * 2)
+        y = round(position[1] * 2)
         return (x, y)
     
     #Get the oldest genotypes
@@ -580,7 +584,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=True)
+        self._runner = LocalRunner(headless=False)
 
     def _select_parents(
         self,
@@ -661,7 +665,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
                 #print(f"fitness: {best_individual[1].value}")
 
-                genotypemm = (
+                genotype = (
                     await GenotypeSerializer.from_database(
                         session, [best_individual[0].genotype_id]
                     )           
@@ -671,7 +675,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
             controllerList = []
-            for i in range(1):
+            for i in range(8):
                 actor, controller = develop(genotype).make_actor_and_controller()
                 controllerList.append(controller)
             bounding_box = actor.calc_aabb()
@@ -691,8 +695,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                sample[i][0]*3*0,
-                                sample[i][1]*3*0,
+                                sample[i][0]*3*1,
+                                sample[i][1]*3*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*1,
                             ]
                         ),
