@@ -674,8 +674,9 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
+            numberAGENTS = 20
             controllerList = []
-            for i in range(8):
+            for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
                 controllerList.append(controller)
             bounding_box = actor.calc_aabb()
@@ -684,8 +685,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
             #rng = np.random.default_rng()
             radius = 0.2
-            engine = qmc.PoissonDisk(d=2, radius=radius)
-            sample = engine.random(8)
+            engine = qmc.PoissonDisk(d=5, radius=radius)
+            sample = engine.random(numberAGENTS)
 
             #print(sample)
 
@@ -695,8 +696,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                sample[i][0]*3*1,
-                                sample[i][1]*3*1,
+                                sample[i][0]*10*1,
+                                sample[i][1]*10*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*1,
                             ]
                         ),
