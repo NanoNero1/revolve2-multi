@@ -323,16 +323,16 @@ def develop(genotype: Genotype) -> ModularRobot:
     """
 
     #THESE ARE FOR SPIDER
-    body.core.left = ActiveHinge(math.pi / 2.0)
+    body.core.left = ActiveHinge(0/ 2.0)
     body.core.left.attachment = Brick(0.0)
     
-    body.core.right = ActiveHinge(0/ 2.0)
+    body.core.right = ActiveHinge(math.pi/ 2.0)
     body.core.right.attachment = Brick(0.0)
 
-    body.core.front = ActiveHinge(math.pi/ 2.0)
+    body.core.front = ActiveHinge(0/ 2.0)
     body.core.front.attachment = Brick(0.0)
 
-    body.core.back = ActiveHinge(0/ 2.0)
+    body.core.back = ActiveHinge(math.pi/ 2.0)
     body.core.back.attachment = Brick(0.0)
     #"FACE" is SOUTH-WEST
 

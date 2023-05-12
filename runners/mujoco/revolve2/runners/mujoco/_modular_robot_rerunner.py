@@ -54,7 +54,7 @@ class ModularRobotRerunner:
         for robot in robots:
             actor, controller = robot.make_actor_and_controller()
             bounding_box = actor.calc_aabb()
-            env = Environment(EnvironmentActorController(controller))
+            env = Environment(EnvironmentActorController([controller]))
             env.actors.append(
                 PosedActor(
                     actor,

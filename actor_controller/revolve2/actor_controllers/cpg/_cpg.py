@@ -206,7 +206,7 @@ class CpgActorController(ActorController):
         outPuts = self._state[0 : self._num_output_neurons].copy()
 
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
-        if self.tarA > 0:
+        if self.tarA < 0:
             for i in self._jointsLeft:
                 outPuts[i] = outPuts[i]*scaleD
                 #outPuts[i] = 0

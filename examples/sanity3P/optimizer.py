@@ -659,9 +659,9 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
                 assert best_individual is not None
 
-                print(f"fitness: {best_individual[1].value}")
+                #print(f"fitness: {best_individual[1].value}")
 
-                genotype = (
+                genotypemm = (
                     await GenotypeSerializer.from_database(
                         session, [best_individual[0].genotype_id]
                     )           
@@ -723,8 +723,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                 + ((begin_state.position[1] - end_state.position[1]) ** 2)
             )
         ) """
-        print(f"Fitness: %s " % float(end_state.position[0]))
-        return float(end_state.position[0])
+        print(f"Fitness: %s " % float(end_state.position[0]*-1))
+        return float(end_state.position[0]*-1)
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
         session.add(
