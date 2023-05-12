@@ -62,7 +62,7 @@ class CpgActorController(ActorController):
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
-        self.p = 6
+        self.p = 4
         self.m33 = Matrix33()
         self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
         self.getInfo = [0,0]
@@ -123,7 +123,7 @@ class CpgActorController(ActorController):
 
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
-        self.tarA = -1*self.bodyA - (math.pi/2.0)
+        self.tarA = -1*self.bodyA - (math.pi/2.0)*0
         pass
 
     #Applies the ELU activation function for the NN
@@ -153,7 +153,7 @@ class CpgActorController(ActorController):
         #There might be some reference issue here, check me
         #output = list(self.model_pred(np.ndarray((3,), buffer=np.array([ang,dist,tag])),self.weights)).copy()
         output = list(self.model_pred(np.array([ang,dist,tag,dumbo]),self.weights)).copy()
-        self.tarA = output[0]
+        #self.tarA = output[0]
 
         #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
         self.tag = output[1]
@@ -166,7 +166,7 @@ class CpgActorController(ActorController):
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
 
-        self.bodyA = self.quat_to_angle(ori)
+        self.bodyA = self.quat_to_angle(ori) - math.pi/4.0
         self.bodyPos = actorState.position
         
         self.gridID = args[1]

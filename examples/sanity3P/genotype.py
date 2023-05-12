@@ -300,7 +300,8 @@ def develop(genotype: Genotype) -> ModularRobot:
     body = Body()
 
     #LEFT IS DOWN
-
+    """ 
+    #THESE ARE FOR GECKO
     body.core.left = ActiveHinge(0 / 2.0)
     body.core.left.attachment = Brick(0.0)
     
@@ -319,7 +320,22 @@ def develop(genotype: Genotype) -> ModularRobot:
 
     body.core.back.attachment.front.attachment.right = ActiveHinge(0)
     body.core.back.attachment.front.attachment.right.attachment = Brick(0.0)
+    """
+
+    #THESE ARE FOR SPIDER
+    body.core.left = ActiveHinge(math.pi / 2.0)
+    body.core.left.attachment = Brick(0.0)
     
+    body.core.right = ActiveHinge(0/ 2.0)
+    body.core.right.attachment = Brick(0.0)
+
+    body.core.front = ActiveHinge(math.pi/ 2.0)
+    body.core.front.attachment = Brick(0.0)
+
+    body.core.back = ActiveHinge(0/ 2.0)
+    body.core.back.attachment = Brick(0.0)
+    #"FACE" is SOUTH-WEST
+
     body.finalize()
     
     brain = brain_develop(genotype.brain, body)

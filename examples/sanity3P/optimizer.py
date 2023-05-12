@@ -46,6 +46,10 @@ from revolve2.core.database import open_async_database_sqlite
 from revolve2.core.database.serializers import DbFloat
 from revolve2.core.optimization.ea.generic_ea import DbEAOptimizerIndividual
 import pandas as pd
+import warnings
+with warnings.catch_warnings():
+    warnings.warn("Let this be your last warning")
+    warnings.simplefilter("ignore")
 
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
@@ -123,7 +127,7 @@ class EnvironmentActorController(EnvironmentController):
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        return [ np.array(weights), np.array(biases)]
+        return [ np.array(weights,dtype=object), np.array(biases,dtype=object)]
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -174,7 +178,7 @@ class EnvironmentActorController(EnvironmentController):
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
-        self.updateGrid()
+        ##self.updateGrid()
 
         ## Time Based Section - doesnt update on every loop
         self.currTime = (datetime.now().timestamp())
@@ -183,22 +187,22 @@ class EnvironmentActorController(EnvironmentController):
             #print('predlist')
             #print(self.predList)
             #print(self.preyList)
-            self.cognitiveActors(self.actorStates)
-            self.writeMyCSV()
+            ##self.cognitiveActors(self.actorStates)
+            ##self.writeMyCSV()
             #print(f"prey: %s" % self.preyList.index)
             #print(f"pred: %s" % self.predList.index)
-            print(self.actFrame.iloc[0])
+            #print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
         if float(self.currTime - self.lastTime) > 0.3:
             raAct = randint(0,0)
-            actor = self.actor_controllerList[raAct]
+            ##actor = self.actor_controllerList[raAct]
 
-            datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
+            ##datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
             #Normally, having a dynamically sized array especially with tons of data is a bad idea,
             #Luckily it gets emptied out fairly regularly so the ammortization isnt super harmful
-            self.pushCollectData.append(datas)
+            ##self.pushCollectData.append(datas)
             
 
 
@@ -264,7 +268,7 @@ class EnvironmentActorController(EnvironmentController):
             #else:
             #    caught = None
             if caught != None:
-                print(f"caught: %s " % caught)
+                #print(f"caught: %s " % caught)
                 #dumbo
                 #print(caught)
                 self.switchBrain(caught)
@@ -576,7 +580,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
@@ -657,7 +661,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
                 print(f"fitness: {best_individual[1].value}")
 
-                genotypem = (
+                genotype = (
                     await GenotypeSerializer.from_database(
                         session, [best_individual[0].genotype_id]
                     )           
@@ -679,7 +683,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             engine = qmc.PoissonDisk(d=2, radius=radius)
             sample = engine.random(8)
 
-            print(sample)
+            #print(sample)
 
             for i in range(len(controllerList)):
                 env.actors.append(
@@ -719,8 +723,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                 + ((begin_state.position[1] - end_state.position[1]) ** 2)
             )
         ) """
-        print(f"Fitness: %s " % float(end_state.position[1]*-1))
-        return float(end_state.position[1]*-1)
+        print(f"Fitness: %s " % float(end_state.position[0]))
+        return float(end_state.position[0])
 
     def _on_generation_checkpoint(self, session: AsyncSession) -> None:
         session.add(

@@ -61,10 +61,20 @@ class BrainCpgNetworkNeighbour(Brain, ABC):
         # Find the left and right joint sets (and corresponding cpg indexs)
         jointsLeft = []
         jointsRight = []
+
+        #For Horizontal Axis of symmetry
         for ind, hinge in enumerate(active_hinges):
+            break
             if body.grid_position(hinge)[1] < 0:
                 jointsLeft.append(ind)
             elif body.grid_position(hinge)[1] > 0:
+                jointsRight.append(ind)
+
+        #For a diagonal axis of symmetry
+        for ind, hinge in enumerate(active_hinges):
+            if body.grid_position(hinge)[1]*-1.0 + body.grid_position(hinge)[0] < 0:
+                jointsLeft.append(ind)
+            elif body.grid_position(hinge)[1]*-1.0 + body.grid_position(hinge)[0] > 0:
                 jointsRight.append(ind)
     
 
