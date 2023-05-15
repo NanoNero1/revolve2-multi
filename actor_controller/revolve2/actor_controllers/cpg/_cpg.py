@@ -80,9 +80,6 @@ class CpgActorController(ActorController):
         """
         self._state = self._rk45(self._state, self._weight_matrix, dt)
 
-        #Updates our target angle
-        #self.findTarAngle()
-
         #Time Loop that helps for debugging prints
         #         
         self.currTime = (datetime.now().timestamp())
@@ -136,22 +133,12 @@ class CpgActorController(ActorController):
     def model_pred(self,input, weights):
         temp = input.copy()
         for weight, bias in zip(weights[0],weights[1]):
-            #print(temp)
-            #print("^t")
-            #print(weight)
-            #print("^w")
-            #print(bias)
-            #print("^b")
             temp = np.dot(temp, weight)+bias
             temp = self.np_elu(temp)
-            #print(gotthru)
-
-        #print(temp)
         return temp
     
     def makeCognitiveOutput(self,ang,dist,tag,dumbo):
         #There might be some reference issue here, check me
-        #output = list(self.model_pred(np.ndarray((3,), buffer=np.array([ang,dist,tag])),self.weights)).copy()
         output = list(self.model_pred(np.array([ang,dist,tag,dumbo]),self.weights)).copy()
         self.tarA = output[0]
 
@@ -170,7 +157,6 @@ class CpgActorController(ActorController):
         self.bodyPos = actorState.position
         
         self.gridID = args[1]
-        #self.getInfo = args[2]
         pass
 
     #Initial instructions from the environment controller

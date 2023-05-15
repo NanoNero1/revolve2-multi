@@ -90,9 +90,6 @@ class EnvironmentActorController(EnvironmentController):
 
             self.actorCount += 1
 
-        #print(self.actFrame)
-
-
         self.updPreyPred()
 
         header = ['id', 'predprey', 'tag', 'position']
@@ -183,10 +180,6 @@ class EnvironmentActorController(EnvironmentController):
         ## Time Based Section - doesnt update on every loop
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 2:
-            #print(self.currTime - self.lastTime)
-            #print('predlist')
-            #print(self.predList)
-            #print(self.preyList)
             self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
             print(f"prey: %s" % self.preyList.index)
@@ -230,86 +223,58 @@ class EnvironmentActorController(EnvironmentController):
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "prey"
 
-        #bestPred = self.new_denseWeights(self.configuration)
-        
         actor.weights = self.mutateWeights(bestPred,self.configuration)
         itsNow = datetime.now().timestamp()
         actor.timeBorn = itsNow
 
         #Update the actor dataframe's time
         self.actFrame.loc[id,"timeBorn"] = itsNow
-
-        
-
         self.updPreyPred()
 
     #Handles the mechanics of who gets caught and who dies out
     def updateGrid(self):
+        #All information retrieval needs to happen before changes are made
         self.updateActFrame()
         self.updPreyPred()
 
         #Handles Death of Prey
-
-        #All information retrieval needs to happen before changes are made
-        #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
-        #preyGrid = [actor.gridID for actor in self.preyList["actor"]]
-        #predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
-        
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            #print(type(self.preyList))
-            #print(self.preyList)
-            #print()
             if caught != None or len(self.preyList.index) < 2:
                 break
-            #print("caught?")
             caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
             caught = caughtList.index[0] if len(caughtList) > 0 else None
-            #predGID = (self.actor_controllerList[pred]).gridID
-            #if pred.gridID in preyGrid:
-            #    caught = (self.preyList).index[preyGrid.index(predGID)]
-            #else:
-            #    caught = None
             if caught != None:
-                #print(f"caught: %s " % caught)
-                #dumbo
-                #print(caught)
                 self.switchBrain(caught)
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
                 self.updPreyPred()
-                #preyGrid = [actor.gridID for actor in self.preyList["actor"]]
-                #preyGrid = [(self.actor_controllerList[id]).gridID for id in self.preyList]
             else:
                 lol = 0
 
         #Handles Death of Predator
         if len(self.predList) > 0:
             minTime = min(self.predList["timeBorn"])
-            #predID = predTimes.index(minTime)
             predID = self.predList["timeBorn"].idxmin()
-                #print(pred.timeBorn)
-                #print(self.lastTime)
-                #print(pred.timeBorn - self.lastTime)
 
-            #I don't know why but caught seems to activate despite no prey?
+            #Main Conditional
             if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
                     #print(wenthere)
                     self.switchBrain(predID)
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
-        #actorDistList = [actor.position]
         for ind,actor in enumerate(self.actor_controllerList):
-            posList = [other.bodyPos for other in self.actor_controllerList]
+            posList = [other.bodyPos for other in self.actor_controllerList if (actor.id != actor.lastKiller)]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             smallest = min(distList)
             closestActor = self.actor_controllerList[distList.index(smallest)]
 
+            closestVector =  np.array(closestActor.bodyPos[:2]) - np.array(actor.bodyPos[:2])
 
-            
-            angle = self.angleBetween(actor.bodyPos,closestActor.bodyPos)
+            standardAngle = self.angleBetween([-1.0,-1.0],closestVector)
+            angle = standardAngle - actor.bodyA
             dumbo = 2
             #This is where we can pass any cognitive information, 
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
@@ -346,31 +311,17 @@ class EnvironmentActorController(EnvironmentController):
         #Update the predator and prey lists before checking, its probably uneccessary though
         self.updPreyPred()
         
-        #actorMe
-        #preyTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "prey"])
-        #predTimes = ([actor.timeBorn for actor in self.actor_controllerList if actor.preyPred == "pred"])
-        #preyTimes = self.preyList["timeBorn"]
         if preyPred == "prey":
-            #maxTime = min(preyTimes)
-            #preyID = preyTimes.index(maxTime)
-            #genoID = self.preyList[preyID]
-            genoID = self.preyList['timeBorn'].idxmin()
-            
+            genoID = self.preyList['timeBorn'].idxmin()       
         else:
-            #maxTime = max(predTimes)
-            #predID = predTimes.index(maxTime)
-            #genoID = self.predList[predID]
             genoID = self.predList['timeBorn'].idxmin()
 
         return (self.actor_controllerList[genoID]).weights
 
     #Updates which are prey and which are predators
     def updPreyPred(self):
-        #self.preyList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "prey"]
         self.preyList = self.actFrame.query("preyPred=='prey'")
         self.predList = self.actFrame.query("preyPred=='pred'")
-        #print(self.predList)
-        #self.predList = [ actor.id for actor in self.actor_controllerList if actor.preyPred == "pred"]
 
     #Finds the distance between two actors, return a super large distance if same position
     #so that an actor "ignores" itself in terms of distance
@@ -404,12 +355,6 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
-        #UDATE: gridID, 
-        #for actor in self.actor_controllerList:
-        #    break
-        #    self.actFrame.loc[actor.id,"gridID"] = actor.gridID
-        
-        #Pandas doesnt like the above, not sure why
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     
@@ -674,7 +619,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 20
+            numberAGENTS = 8
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
@@ -698,7 +643,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
                             [
                                 (sample[i][0]-0.5)*6*1,
                                 (sample[i][1]-0.5)*6*1,
-                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*1,
+                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),
                         Quaternion(),
