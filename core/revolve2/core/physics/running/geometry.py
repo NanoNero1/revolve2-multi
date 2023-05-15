@@ -38,3 +38,5 @@ class Heightmap(Geometry):
     base_thickness: float
     heights: npt.NDArray[np.float_]  # MxN matrix. outer list is x, inner list is y
     color: Vector3 = Vector3([0.2, 0.2, 0.2])
+
+    #useful

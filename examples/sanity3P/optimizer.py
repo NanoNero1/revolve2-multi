@@ -206,7 +206,7 @@ class EnvironmentActorController(EnvironmentController):
         
     #Makes the brain switch from predator to prey and vice versa
     def switchBrain(self,id):
-        print("change")
+        #print("change")
         actor = self.actor_controllerList[id]
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
@@ -302,8 +302,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = self.actorStates[id].position
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 2)
-        y = round(position[1] * 2)
+        x = round(position[0] * 4)
+        y = round(position[1] * 4)
         return (x, y)
     
     #Get the oldest genotypes
@@ -356,6 +356,8 @@ class EnvironmentActorController(EnvironmentController):
     #Updates the actor dataframe
     def updateActFrame(self):
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
+
+    #def (self):
 
     
 
@@ -619,7 +621,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 8
+            numberAGENTS = 5
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
@@ -630,7 +632,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
 
             #rng = np.random.default_rng()
             radius = 0.2
-            engine = qmc.PoissonDisk(d=5, radius=radius)
+            engine = qmc.PoissonDisk(d=4, radius=radius)
             sample = engine.random(numberAGENTS)
 
             #print(sample)
@@ -641,8 +643,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                (sample[i][0]-0.5)*6*1,
-                                (sample[i][1]-0.5)*6*1,
+                                (sample[i][0]-0.5)*16*1,
+                                (sample[i][1]-0.5)*16*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),

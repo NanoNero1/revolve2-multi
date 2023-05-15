@@ -62,7 +62,7 @@ class CpgActorController(ActorController):
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
-        self.p = 4
+        self.p = 2
         self.m33 = Matrix33()
         self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
         self.getInfo = [0,0]
@@ -80,6 +80,7 @@ class CpgActorController(ActorController):
         """
         self._state = self._rk45(self._state, self._weight_matrix, dt)
 
+        #self.findTarAngle()
         #Time Loop that helps for debugging prints
         #         
         self.currTime = (datetime.now().timestamp())
@@ -120,7 +121,7 @@ class CpgActorController(ActorController):
 
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
-        self.tarA = -1*self.bodyA - (math.pi/4.0)*1
+        self.tarA = -1*self.bodyA + (math.pi/4.0)*1
         pass
 
     #Applies the ELU activation function for the NN

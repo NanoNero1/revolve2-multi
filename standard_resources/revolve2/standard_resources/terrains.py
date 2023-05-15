@@ -28,6 +28,7 @@ def flat(size: Vector3 = Vector3([20.0, 20.0, 0.0])) -> Terrain:
         ]
     )
 
+#I wil write here a terrain that is like a bowl/prison/room
 
 def crater(
     size: Tuple[float, float],
