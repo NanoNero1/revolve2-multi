@@ -29,6 +29,24 @@ def flat(size: Vector3 = Vector3([20.0, 20.0, 0.0])) -> Terrain:
     )
 
 #I wil write here a terrain that is like a bowl/prison/room
+def jail(size: Vector3 = Vector3([20.0, 20.0, 5.0])):
+    #heightmap = np.zeros((10, 10))
+    
+    x = np.ones((10,10))
+    x[1:-1,1:-1] = 0
+
+    return Terrain(
+        static_geometry=[
+        geometry.Heightmap(
+        position=Vector3(),
+        orientation=Quaternion(),
+        size=Vector3([size[0], size[1], 5.0]),
+        base_thickness=1,
+        heights=x,
+            )
+        ]
+    )
+
 
 def crater(
     size: Tuple[float, float],

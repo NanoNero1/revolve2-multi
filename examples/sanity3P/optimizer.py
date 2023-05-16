@@ -383,7 +383,10 @@ class Optimizer(EAOptimizer[Genotype, float]):
     Uses the generic EA optimizer as a base.
     """
 
-    _TERRAIN = terrains.flat()
+    #_TERRAIN = terrains.flat()
+    #_TERRAIN = terrains.crater((20,20),1,1)
+    _TERRAIN = terrains.jail()
+
 
     _db_id: DbId
 
