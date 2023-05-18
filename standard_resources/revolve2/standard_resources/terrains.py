@@ -40,7 +40,7 @@ def jail(size: Vector3 = Vector3([20.0, 20.0, 5.0])):
         geometry.Heightmap(
         position=Vector3(),
         orientation=Quaternion(),
-        size=Vector3([size[0], size[1], 5.0]),
+        size=Vector3([size[0], size[1], 10.0]),
         base_thickness=1,
         heights=x,
             )

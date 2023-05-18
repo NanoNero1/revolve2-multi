@@ -71,6 +71,7 @@ class CpgActorController(ActorController):
         self.lastTime = self.timeBorn
         self.tag = 0
         self.lastKiller = None
+        self.momentum = 0
 
     def step(self, dt: float) -> None:
         """
@@ -129,6 +130,15 @@ class CpgActorController(ActorController):
         mask = np.where(x<0)
         x[mask] = np.exp(x[mask])-1
         return x
+    
+    #Momentum allows the steering to happen gradually rather than quick flicks
+    def calcMomentum(self,scaleD):
+        #scaleD is expected to be between 0 and 1
+        if self.momentum > 0:
+            return scaleD
+        else: 
+            return scaleD + (1-scaleD)*self.momentum/20
+            self.momentum = self.momentum - 1
 
     #Calculates the NN ouput manually with numpy
     def model_pred(self,input, weights):
@@ -146,6 +156,7 @@ class CpgActorController(ActorController):
         #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
         self.tag = output[1]
         #print(f"this is tag %s " % self.tag)
+        self.momentum = 100
 
     #Actor recieves real-time information here
     def passInfo(self, *args) -> None:
@@ -192,7 +203,10 @@ class CpgActorController(ActorController):
         #Copying means we are not referencing, we REALLY dont want to change self._state
         outPuts = self._state[0 : self._num_output_neurons].copy()
 
+        #I SHOULD PROBABLY MOVE THIS INTO COGNITIVE
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
+        #scaleD = self.calcMomentum(scaleC)
+
         if self.tarA < 0:
             for i in self._jointsLeft:
                 outPuts[i] = outPuts[i]*scaleD

@@ -182,8 +182,8 @@ class EnvironmentActorController(EnvironmentController):
         if float(self.currTime - self.lastTime) > 2:
             self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
-            print(f"prey: %s" % self.preyList.index)
-            print(f"pred: %s" % self.predList.index)
+            #print(f"prey: %s" % self.preyList.index)
+            #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
@@ -534,7 +534,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
@@ -624,7 +624,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 5
+            numberAGENTS = 20
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
