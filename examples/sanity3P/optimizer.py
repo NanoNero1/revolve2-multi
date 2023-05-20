@@ -300,7 +300,7 @@ class EnvironmentActorController(EnvironmentController):
 
     #Returns a tuple for where the actor is on the grid
     def get_grid_Tup(self, id):
-        position = (self.actorStates[id].position)[1:]
+        position = (self.actorStates[id].position)
         #NEED FIX: I dont super understand why its messing up with values other than 10
         y = round(position[0] * 2)
         x = round(position[1] * 2)
@@ -646,7 +646,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                (sample[i][0]-0.5)*16*0,
+                                (sample[i][0]-0.5)*16*i,
                                 (sample[i][1]-0.5)*16*0,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
                             ]

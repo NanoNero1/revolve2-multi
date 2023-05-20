@@ -184,8 +184,9 @@ class CpgActorController(ActorController):
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
 
-        self.bodyA = self.modusAng(self.quat_to_angle(ori)) - math.pi/4.0
-        self.bodyPos = actorState.position[1:]
+        self.bodyA = self.modusAng(self.quat_to_angle(ori) - math.pi/4.0)
+        #self.bodyPos = actorState.position[1:]
+        self.bodyPos = actorState.position
         
         self.gridID = args[1]
         pass
