@@ -171,6 +171,12 @@ class CpgActorController(ActorController):
         #print(f"this is tag %s " % self.tag)
         self.momentum = 100
 
+    #My orientation equation gives angles outside of the boundaries (-pi,pi) this fixes it
+    def modusAng(self,ang):
+        phase = ang + math.pi
+        modused = (phase % (2*math.pi)) - math.pi
+        return modused
+
     #Actor recieves real-time information here
     def passInfo(self, *args) -> None:
         actorState = args[0]
@@ -178,7 +184,7 @@ class CpgActorController(ActorController):
         self.m33 = Matrix33(matrix33.create_from_quaternion(ori))
         self.axis = actorState.orientation.axis
 
-        self.bodyA = self.quat_to_angle(ori) - math.pi/4.0
+        self.bodyA = self.modusAng(self.quat_to_angle(ori)) - math.pi/4.0
         self.bodyPos = actorState.position[1:]
         
         self.gridID = args[1]
