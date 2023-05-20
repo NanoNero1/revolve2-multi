@@ -73,6 +73,12 @@ class CpgActorController(ActorController):
         self.lastKiller = None
         self.momentum = 0
 
+    #Initial instructions from the environment controller
+    def controllerInit(self,id,weight_mat,preyPred):
+        self.id = id
+        self.weights = weight_mat
+        self.preyPred = preyPred
+
     def step(self, dt: float) -> None:
         """
         Step the controller dt seconds forward.
@@ -86,12 +92,19 @@ class CpgActorController(ActorController):
         #         
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 0.5:
-            #print(f"Body Pos: %s" % self.bodyPos)
-            #print(f"BAngle %s" % self.bodyA)
-            #print(f"TAngle %s" % self.tarA)
-            #print(f"L/R %s" % LR)
-            #print(self.id)
+            if self.id == 0:
+                print(self.id)
+                print(f"Body Pos: %s" % self.bodyPos)
+                print(f"BAngle %s" % self.bodyA)
+                print(f"TAngle %s" % self.tarA)
+                print(f"Tag %s" % self.tag)
+                print(f"Born %s" % self.timeBorn)
+                print(f"Killer %s" % self.lastKiller)
+                print(self.gridID)
+            #print(f"ScaleD %s" % self.scaleD)
+
             #print(self.gridID)
+
 
             #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
             self.lastTime = self.currTime;
@@ -166,16 +179,10 @@ class CpgActorController(ActorController):
         self.axis = actorState.orientation.axis
 
         self.bodyA = self.quat_to_angle(ori) - math.pi/4.0
-        self.bodyPos = actorState.position
+        self.bodyPos = actorState.position[1:]
         
         self.gridID = args[1]
         pass
-
-    #Initial instructions from the environment controller
-    def controllerInit(self,id,weight_mat,preyPred):
-        self.id = id
-        self.weights = weight_mat
-        self.preyPred = preyPred
 
     @staticmethod
     def _rk45(
@@ -205,6 +212,7 @@ class CpgActorController(ActorController):
 
         #I SHOULD PROBABLY MOVE THIS INTO COGNITIVE
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
+        self.scaleD = scaleD
         #scaleD = self.calcMomentum(scaleC)
 
         if self.tarA < 0:

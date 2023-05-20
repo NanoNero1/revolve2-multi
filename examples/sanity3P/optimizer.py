@@ -300,11 +300,11 @@ class EnvironmentActorController(EnvironmentController):
 
     #Returns a tuple for where the actor is on the grid
     def get_grid_Tup(self, id):
-        position = self.actorStates[id].position
+        position = (self.actorStates[id].position)[1:]
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 4)
-        y = round(position[1] * 4)
-        return (x, y)
+        y = round(position[0] * 2)
+        x = round(position[1] * 2)
+        return (y, x)
     
     #Get the oldest genotypes
     def bestGenotype(self,preyPred):
@@ -326,8 +326,8 @@ class EnvironmentActorController(EnvironmentController):
     #Finds the distance between two actors, return a super large distance if same position
     #so that an actor "ignores" itself in terms of distance
     def actorDist(self,pos1,pos2):
-        x = pos1[0] - pos2[0]
-        y = pos1[1] - pos2[1]
+        y = pos1[0] - pos2[0]
+        x = pos1[1] - pos2[1]
         dist = math.sqrt( (x**2 + y**2) )
         if dist > 0.01:
             return dist
@@ -534,7 +534,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=True)
+        self._runner = LocalRunner(headless=False)
 
     def _select_parents(
         self,
@@ -624,7 +624,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 20
+            numberAGENTS = 2
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
@@ -646,9 +646,9 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                (sample[i][0]-0.5)*16*1,
-                                (sample[i][1]-0.5)*16*1,
-                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
+                                (sample[i][0]-0.5)*16*0,
+                                (sample[i][1]-0.5)*16*0,
+                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
                             ]
                         ),
                         Quaternion(),
