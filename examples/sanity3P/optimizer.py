@@ -50,6 +50,7 @@ import warnings
 with warnings.catch_warnings():
     warnings.warn("Let this be your last warning")
     warnings.simplefilter("ignore")
+import random
 
 
 # This is not exactly the same as the revolve class `revolve2.core.physics.environment_actor_controller.EnvironmentActorController`
@@ -164,9 +165,14 @@ class EnvironmentActorController(EnvironmentController):
         """
 
         self.actorStates = argList
+        print("baba")
+        print(len(argList))
 
         #Passing info to the actor and asking it to control
         #Only pass info that is needed on every tick
+        print("lol")
+        print([sta.position for sta in argList])
+        print("lol2")
         for ind, actor in enumerate(self.actor_controllerList):
 
             actor.passInfo(self.actorStates[ind],
@@ -182,8 +188,8 @@ class EnvironmentActorController(EnvironmentController):
         if float(self.currTime - self.lastTime) > 2:
             self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
-            #print(f"prey: %s" % self.preyList.index)
-            #print(f"pred: %s" % self.predList.index)
+            print(f"prey: %s" % self.preyList.index)
+            print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
@@ -246,15 +252,21 @@ class EnvironmentActorController(EnvironmentController):
             caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
             caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
+                
+                print("ok")
+                print(self.actor_controllerList[caught].gridID)
+                print(pred.gridID)
                 self.switchBrain(caught)
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
+                self.actor_controllerList[caught].lastKiller = pred.id
                 self.updPreyPred()
             else:
                 lol = 0
 
         #Handles Death of Predator
         if len(self.predList) > 0:
+            #print(self.predList["timeBorn"])
             minTime = min(self.predList["timeBorn"])
             predID = self.predList["timeBorn"].idxmin()
 
@@ -302,9 +314,9 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = (self.actorStates[id].position)
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        y = round(position[0] * 2)
-        x = round(position[1] * 2)
-        return (y, x)
+        x = round(position[0] * 3)
+        y = round(position[1] * 3)
+        return (x, y)
     
     #Get the oldest genotypes
     def bestGenotype(self,preyPred):
@@ -355,6 +367,7 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
+        print([actor.bodyPos for actor in self.actor_controllerList])
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     #def (self):
@@ -634,9 +647,11 @@ class Optimizer(EAOptimizer[Genotype, float]):
             env.static_geometries.extend(self._TERRAIN.static_geometry)
 
             #rng = np.random.default_rng()
-            radius = 0.2
-            engine = qmc.PoissonDisk(d=4, radius=radius)
+            radius = 0.05
+            engine = qmc.PoissonDisk(d=2, radius=radius)
             sample = engine.random(numberAGENTS)
+
+            
 
             #print(sample)
 
@@ -646,9 +661,9 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                (sample[i][0]-0.5)*16*i,
-                                (sample[i][1]-0.5)*16*0,
-                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*10,
+                                np.random.uniform(-1.0,1.0)*15*1,
+                                np.random.uniform(-1.0,1.0)*15*1,
+                                bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),
                         Quaternion(),
