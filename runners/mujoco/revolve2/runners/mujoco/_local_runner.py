@@ -400,7 +400,7 @@ class LocalRunner(Runner):
     def _get_actor_states(
         cls, env_descr: Environment, data: mujoco.MjData, model: mujoco.MjModel
     ) -> List[ActorState]:
-        print(data.qpos)
+        #print(data.qpos)
         return [
             cls._get_actor_state(i, data, model) for i in range(len(env_descr.actors))
         ]
@@ -416,10 +416,10 @@ class LocalRunner(Runner):
         )
         assert bodyid >= 0
 
-        qindex = model.body_jntadr[bodyid]
-        print(f"bodyid %s" % bodyid)
-        qindex = bodyid*11
-        print(f"qindex %s" % qindex)
+        #qindex = model.body_jntadr[bodyid]
+        #print(f"bodyid %s" % bodyid)
+        qindex = int((bodyid-1)/5*11)
+        #print(f"qindex %s" % qindex)
 
         # explicitly copy because the Vector3 and Quaternion classes don't copy the underlying structure
         position = Vector3([n for n in data.qpos[qindex : qindex + 3]])

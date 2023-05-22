@@ -165,14 +165,14 @@ class EnvironmentActorController(EnvironmentController):
         """
 
         self.actorStates = argList
-        print("baba")
-        print(len(argList))
+        #print("baba")
+        #print(len(argList))
 
         #Passing info to the actor and asking it to control
         #Only pass info that is needed on every tick
-        print("lol")
-        print([sta.position for sta in argList])
-        print("lol2")
+        #print("lol")
+        #print([sta.position for sta in argList])
+        #print("lol2")
         for ind, actor in enumerate(self.actor_controllerList):
 
             actor.passInfo(self.actorStates[ind],
@@ -367,7 +367,7 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
-        print([actor.bodyPos for actor in self.actor_controllerList])
+        print([actor.gridID for actor in self.actor_controllerList])
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     #def (self):
@@ -637,7 +637,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 2
+            numberAGENTS = 4
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
