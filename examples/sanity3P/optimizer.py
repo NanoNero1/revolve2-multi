@@ -300,7 +300,7 @@ class EnvironmentActorController(EnvironmentController):
     def predatorlifeSpan(self):
         predsLeft = len(self.predList)
         
-        if predsLeft > 1:
+        if predsLeft > 3:
             #currently set to a linear scale
             return 4.0  + (20-predsLeft)
         else:
@@ -314,8 +314,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = (self.actorStates[id].position)
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 3)
-        y = round(position[1] * 3)
+        x = round(position[0] * 2)
+        y = round(position[1] * 2)
         return (x, y)
     
     #Get the oldest genotypes
@@ -367,7 +367,7 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
-        print([actor.gridID for actor in self.actor_controllerList])
+        #print([actor.gridID for actor in self.actor_controllerList])
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     #def (self):
@@ -637,7 +637,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 4
+            numberAGENTS = 20
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()

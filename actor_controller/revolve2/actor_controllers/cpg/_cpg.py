@@ -92,7 +92,7 @@ class CpgActorController(ActorController):
         #         
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 0.5:
-            if self.id == 0:
+            if self.id == 0 and False:
                 print(self.id)
                 print(f"Body Pos: %s" % self.bodyPos)
                 print(f"BAngle %s" % self.bodyA)
