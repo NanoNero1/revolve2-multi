@@ -188,8 +188,8 @@ class EnvironmentActorController(EnvironmentController):
         if float(self.currTime - self.lastTime) > 2:
             self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
-            print(f"prey: %s" % self.preyList.index)
-            print(f"pred: %s" % self.predList.index)
+            #print(f"prey: %s" % self.preyList.index)
+            #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
             self.lastTime = (self.currTime)   
 
@@ -285,8 +285,12 @@ class EnvironmentActorController(EnvironmentController):
 
             closestVector =  np.array(closestActor.bodyPos[:2]) - np.array(actor.bodyPos[:2])
 
-            standardAngle = self.angleBetween([-1.0,-1.0],closestVector)
-            angle = standardAngle - actor.bodyA
+            standardAngle = self.angleBetween(closestVector,[-1.0,-0.0])
+            print(actor.id)
+            print(actor.bodyA)
+            print(standardAngle)
+            angle = self.modusAngle(actor.bodyA,standardAngle)
+            print(angle)
             dumbo = 2
             #This is where we can pass any cognitive information, 
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
@@ -353,7 +357,10 @@ class EnvironmentActorController(EnvironmentController):
         angle = math.atan2(det, dot)            # atan2(y, x) or atan2(sin, cos)
         return angle
 
-
+    def modusAngle(self,ang1,ang2):
+        diff = (ang2+math.pi) - (ang1+math.pi)
+        modused = (diff % (2*math.pi)) - math.pi
+        return modused
     ###
     # Utility Functions
     ###
@@ -367,7 +374,8 @@ class EnvironmentActorController(EnvironmentController):
 
     #Updates the actor dataframe
     def updateActFrame(self):
-        #print([actor.gridID for actor in self.actor_controllerList])
+        #print([actor.bodyPos for actor in self.actor_controllerList])
+        #print([actor.bodyA for actor in self.actor_controllerList])
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
     #def (self):
@@ -637,7 +645,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 40
+            numberAGENTS = 2
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
