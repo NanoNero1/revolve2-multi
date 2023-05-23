@@ -289,7 +289,7 @@ class EnvironmentActorController(EnvironmentController):
             print(actor.id)
             print(actor.bodyA)
             print(standardAngle)
-            angle = self.modusAngle(actor.bodyA,standardAngle)
+            angle = self.goodAngle(actor.bodyA,standardAngle)
             print(angle)
             dumbo = 2
             #This is where we can pass any cognitive information, 
@@ -361,6 +361,12 @@ class EnvironmentActorController(EnvironmentController):
         diff = (ang2+math.pi) - (ang1+math.pi)
         modused = (diff % (2*math.pi)) - math.pi
         return modused
+    
+    def goodAngle(self,ang1,ang2):
+        modus = (ang2 - ang1) % 2*math.pi
+        if modus > math.pi:
+            modus = -2*math.pi*np.sign(modus) + modus
+        return modus
     ###
     # Utility Functions
     ###
