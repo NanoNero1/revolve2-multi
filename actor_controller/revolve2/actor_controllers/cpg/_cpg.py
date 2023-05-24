@@ -161,13 +161,20 @@ class CpgActorController(ActorController):
             temp = self.np_elu(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,dist,tag,dumbo):
+    def makeCognitiveOutput(self,ang,dist,tag):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,dist,tag,dumbo]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,dist,tag]),self.weights)).copy()
         self.tarA = output[0]
 
-        #self.tag = round(np.clip(output[1],a_min=-1,a_max=1))
-        self.tag = output[1]
+        tagRaw = np.clip(output[1],a_min=-1,a_max=1)
+        if tagRaw > 0.33:
+            tagRaw = 1
+        elif tagRaw > -0.33:
+            tagRaw = 0
+        else:
+            tagRaw = -1
+        #self.tag = output[1]
+        self.tag = tagRaw
         #print(f"this is tag %s " % self.tag)
         self.momentum = 100
 

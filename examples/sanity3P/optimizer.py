@@ -125,8 +125,8 @@ class EnvironmentActorController(EnvironmentController):
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        jeez = np.array(weights,dtype=object)
-        return np.array([ np.array(weights,dtype=object), np.array(biases,dtype=object)])
+        #jeez = np.array(weights,dtype=object)
+        return np.array([ weights, biases])
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -193,6 +193,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
             self.positionMap()
+            #print((self.actor_controllerList[0]).weights)
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
@@ -667,7 +668,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 2
+            numberAGENTS = 10
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
