@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [4,3,2]
+        self.configuration = [3,3,2]
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','gridID','lastKiller'])
@@ -93,13 +93,13 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'predprey', 'tag', 'position']
+        header = ['id', 'position','angle','predprey', 'tag']
         data = [
-            ['Albania', 28748, 'AL', 'ALB'],
-            ['Algeria', 2381741, 'DZ', 'DZA'],
-            ['American Samoa', 199, 'AS', 'ASM'],
-            ['Andorra', 468, 'AD', 'AND'],
-            ['Angola', 1246700, 'AO', 'AGO']
+            ['Albania', 28748, 'AL', 'ALB',1],
+            ['Algeria', 2381741, 'DZ', 'DZA',1],
+            ['American Samoa', 199, 'AS', 'ASM',1],
+            ['Andorra', 468, 'AD', 'AND',1],
+            ['Angola', 1246700, 'AO', 'AGO',1],
                 ]
 
         with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
@@ -125,7 +125,8 @@ class EnvironmentActorController(EnvironmentController):
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        return [ np.array(weights,dtype=object), np.array(biases,dtype=object)]
+        jeez = np.array(weights,dtype=object)
+        return np.array([ np.array(weights,dtype=object), np.array(biases,dtype=object)])
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -191,6 +192,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(f"prey: %s" % self.preyList.index)
             #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
+            self.positionMap()
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
@@ -289,14 +291,16 @@ class EnvironmentActorController(EnvironmentController):
             print(actor.id)
             print(actor.bodyA)
             print(standardAngle)
+            #goodAngle is still broken
             angle = self.goodAngle(actor.bodyA,standardAngle)
             print(angle)
+            print(smallest)
             dumbo = 2
             #This is where we can pass any cognitive information, 
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
             #tag = randint(0,9)
             #print(tag)
-            actor.makeCognitiveOutput(angle,smallest,closestActor.tag,dumbo)
+            actor.makeCognitiveOutput(angle,smallest,closestActor.tag)
 
             #(self.actorStates[0].position)[:2]
 
@@ -363,9 +367,9 @@ class EnvironmentActorController(EnvironmentController):
         return modused
     
     def goodAngle(self,ang1,ang2):
-        modus = (ang2 - ang1) % 2*math.pi
-        if modus > math.pi:
-            modus = -2*math.pi*np.sign(modus) + modus
+        modus = ang2 - ang1
+        if abs(modus) > math.pi:
+            modus += -2*math.pi*np.sign(modus)
         return modus
     ###
     # Utility Functions
@@ -377,6 +381,18 @@ class EnvironmentActorController(EnvironmentController):
 
             # write multiple rows
             writer.writerows(self.pushCollectData)
+
+    #Here is all the output data needed for 
+    def positionMap(self):
+
+        with open('countries.csv', 'a', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+
+            # write multiple rows
+            for actor in self.actor_controllerList:
+                newDataLine = [actor.id,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag] 
+                writer.writerow(newDataLine)
+
 
     #Updates the actor dataframe
     def updateActFrame(self):
