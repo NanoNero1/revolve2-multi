@@ -95,7 +95,7 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'position','angle','predprey', 'tag']
+        header = ['id', 'simTime', 'position','angle','predprey', 'tag']
         data = [
             ['Albania', 28748, 'AL', 'ALB',1],
             ['Algeria', 2381741, 'DZ', 'DZA',1],
@@ -111,7 +111,7 @@ class EnvironmentActorController(EnvironmentController):
             writer.writerow(header)
 
             # write multiple rows
-            writer.writerows(data)
+            #writer.writerows(data)
 
         headerDeath = ['id', 'simTime','predprey', 'lifespan']
 
@@ -267,9 +267,9 @@ class EnvironmentActorController(EnvironmentController):
             caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
                 
-                print("ok")
-                print(self.actor_controllerList[caught].gridID)
-                print(pred.gridID)
+                #print("ok")
+                #print(self.actor_controllerList[caught].gridID)
+                #print(pred.gridID)
                 self.switchBrain(caught)
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
@@ -400,9 +400,10 @@ class EnvironmentActorController(EnvironmentController):
         with open('countries.csv', 'a', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
 
+            simTime = self.currTime - self.simStartTime
             # write multiple rows
             for actor in self.actor_controllerList:
-                newDataLine = [actor.id,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag] 
+                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag] 
                 writer.writerow(newDataLine)
 
     def deathBornCSV(self,id,preyPred,timeBorn):
@@ -598,7 +599,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=False)
+        self._runner = LocalRunner(headless=True)
 
     def _select_parents(
         self,
