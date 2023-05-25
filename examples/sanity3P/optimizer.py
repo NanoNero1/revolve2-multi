@@ -77,6 +77,8 @@ class EnvironmentActorController(EnvironmentController):
         self.actFrame.set_index('id')
 
         self.lastTime = (datetime.now().timestamp())
+        self.currTime = (datetime.now().timestamp())
+        self.simStartTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
@@ -110,6 +112,14 @@ class EnvironmentActorController(EnvironmentController):
 
             # write multiple rows
             writer.writerows(data)
+
+        headerDeath = ['id', 'simTime','predprey', 'lifespan']
+
+        with open('deathBorn.csv', 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+
+            # write the header
+            writer.writerow(headerDeath)
 
         self.pushCollectData = []
 
@@ -217,6 +227,7 @@ class EnvironmentActorController(EnvironmentController):
     def switchBrain(self,id):
         #print("change")
         actor = self.actor_controllerList[id]
+        self.deathBornCSV(id,actor.preyPred,actor.timeBorn)
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
             actor.preyPred = "pred"
@@ -289,13 +300,13 @@ class EnvironmentActorController(EnvironmentController):
             closestVector =  np.array(closestActor.bodyPos[:2]) - np.array(actor.bodyPos[:2])
 
             standardAngle = self.angleBetween(closestVector,[-1.0,-0.0])
-            print(actor.id)
-            print(actor.bodyA)
-            print(standardAngle)
+            #print(actor.id)
+            #print(actor.bodyA)
+            #print(standardAngle)
             #goodAngle is still broken
             angle = self.goodAngle(actor.bodyA,standardAngle)
-            print(angle)
-            print(smallest)
+            #print(angle)
+            #print(smallest)
             dumbo = 2
             #This is where we can pass any cognitive information, 
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
@@ -393,6 +404,15 @@ class EnvironmentActorController(EnvironmentController):
             for actor in self.actor_controllerList:
                 newDataLine = [actor.id,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag] 
                 writer.writerow(newDataLine)
+
+    def deathBornCSV(self,id,preyPred,timeBorn):
+        with open('deathBorn.csv', 'a', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            lifespan = self.currTime - timeBorn
+            simTimeNow = self.currTime - self.simStartTime
+            # write multiple rows
+            writer.writerow([id,simTimeNow,preyPred,lifespan])
+
 
 
     #Updates the actor dataframe
@@ -668,7 +688,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 10
+            numberAGENTS = 40
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
