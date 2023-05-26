@@ -166,7 +166,7 @@ class CpgActorController(ActorController):
         output = list(self.model_pred(np.array([ang,dist,tag]),self.weights)).copy()
         self.tarA = output[0]
 
-        tagRaw = np.clip(output[1],a_min=-1,a_max=1)
+        tagRaw = np.clip(output[1],a_min=-1,a_max=1)*math.pi
         if tagRaw > 0.33:
             tagRaw = 1
         elif tagRaw > -0.33:

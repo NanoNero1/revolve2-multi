@@ -144,8 +144,10 @@ class EnvironmentActorController(EnvironmentController):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
-            mutWeights[0][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
-            mutWeights[1][ind] += np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
+            a = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
+            mutWeights[0][ind] += np.clip(a,-1.0,1.0)
+            b = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
+            mutWeights[1][ind] += np.clip(b,-1.0,1.0)
         return mutWeights
     
     #Combines two parents' genotpye to make a child genotype
@@ -263,7 +265,7 @@ class EnvironmentActorController(EnvironmentController):
         for pred in self.predList["actor"]:
             if caught != None or len(self.preyList.index) < 2:
                 break
-            caughtList = pyL[(pyL.gridID == pred.gridID) & (pred.id != pyL.lastKiller)]
+            caughtList = pyL[(pyL["gridID"] == pred.gridID) & (pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - 20)]
             caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
                 
@@ -292,7 +294,8 @@ class EnvironmentActorController(EnvironmentController):
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
         for ind,actor in enumerate(self.actor_controllerList):
-            posList = [other.bodyPos for other in self.actor_controllerList if (actor.id != actor.lastKiller)]
+            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn > self.currTime + 20) or (other.preyPred == 'pred'))), self.actor_controllerList))
+            posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             smallest = min(distList)
             closestActor = self.actor_controllerList[distList.index(smallest)]
@@ -312,6 +315,11 @@ class EnvironmentActorController(EnvironmentController):
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
             #tag = randint(0,9)
             #print(tag)
+
+            #Normalizing inputs
+            angle = angle / math.pi
+            smallest = np.clip(smallest,-3,3) / 3
+
             actor.makeCognitiveOutput(angle,smallest,closestActor.tag)
 
             #(self.actorStates[0].position)[:2]
@@ -322,7 +330,7 @@ class EnvironmentActorController(EnvironmentController):
         
         if predsLeft > 3:
             #currently set to a linear scale
-            return 4.0  + (20-predsLeft)
+            return (40-predsLeft)*4
         else:
             return 1000000000
 
@@ -599,7 +607,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=True)
+        self._runner = LocalRunner(headless=False)
 
     def _select_parents(
         self,
