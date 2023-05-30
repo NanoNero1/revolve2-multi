@@ -72,6 +72,7 @@ class CpgActorController(ActorController):
         self.tag = 0
         self.lastKiller = None
         self.momentum = 0
+        self.lastSeenPrey = None
 
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):

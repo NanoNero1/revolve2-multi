@@ -145,16 +145,18 @@ class EnvironmentActorController(EnvironmentController):
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
             a = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
-            mutWeights[0][ind] += np.clip(a,-1.0,1.0)
+            mutWeights[0][ind] += a
+            np.clip(mutWeights[0][ind],-1.0,1.0)
             b = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
-            mutWeights[1][ind] += np.clip(b,-1.0,1.0)
+            mutWeights[1][ind] += b
+            np.clip(mutWeights[1][ind],-1.0,1.0)
         return mutWeights
     
     #Combines two parents' genotpye to make a child genotype
     #STILL HAVE TO TEST!
-    def crossover(self,parent1,parent2):
-        parent1W = parent1.copy()
-        parent2W = parent1.copy()
+    def myCrossover(self,parent1,parent2):
+        parent1W = np.copy(parent1)
+        parent2W = np.copy(parent2)
         crossWeights = []
         crossBiases = []
 
@@ -162,9 +164,9 @@ class EnvironmentActorController(EnvironmentController):
             #Crossover Point at a random interval in the next layer
             cutIndex = randint(1,self.configuration[ind+1]-1) 
 
-            crossWeights.append(np.concatenate(parent1W[0][ind][:cutIndex],parent2W[0][ind][cutIndex:]))
-            crossBiases.append(np.concatenate(parent1W[1][ind][:cutIndex],parent2W[1][ind][cutIndex:]))
-        return [crossWeights, crossBiases]
+            crossWeights.append(np.concatenate((parent1W[0][ind][:cutIndex],parent2W[0][ind][cutIndex:]))    )
+            crossBiases.append(np.concatenate((parent1W[1][ind][:cutIndex],parent2W[1][ind][cutIndex:])))
+        return np.array([ crossWeights, crossBiases])
 
     ###
     #Control Section: This is the place where the cake is put together
@@ -232,6 +234,12 @@ class EnvironmentActorController(EnvironmentController):
         self.deathBornCSV(id,actor.preyPred,actor.timeBorn)
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
+            #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
+             
+            if actor.lastKiller != None:
+                secondBest = self.actor_controllerList[actor.lastKiller].weights
+            else:
+                secondBest = self.new_denseWeights(self.configuration)
             actor.preyPred = "pred"
             bestPred = self.bestGenotype("pred")
 
@@ -239,13 +247,33 @@ class EnvironmentActorController(EnvironmentController):
             self.actFrame.loc[id,"preyPred"] = "pred"
         else:
             #actor = self.actor_controllerList[self.predList[id]]
+            secondBest = self.new_denseWeights(self.configuration)
+            if actor.lastSeenPrey != None:
+                secondBest = 
+            else:
+                secondBest = self.new_denseWeights(self.configuration)
             actor.preyPred = "prey"
             bestPred = self.bestGenotype("prey")
 
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "prey"
 
+
+        #Generation of new weights
         actor.weights = self.mutateWeights(bestPred,self.configuration)
+        print(bestPred)
+        print('dd')
+        print(secondBest)
+        if np.random.uniform(0.0,1.0) < 1.7:
+            crossedOver = self.myCrossover(bestPred,secondBest)
+            print("ddd")
+            print(crossedOver)
+            actor.weights = self.mutateWeights(crossedOver,self.configuration)
+        else:
+            actor.weights = self.new_denseWeights(self.configuration)
+        print("dddd")
+        print(actor.weights)
+        diddit
         itsNow = datetime.now().timestamp()
         actor.timeBorn = itsNow
 
@@ -269,6 +297,10 @@ class EnvironmentActorController(EnvironmentController):
             caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
                 
+                #If a prey got close, but caught, it is a bad prey
+                if caught == pred.lastSeenPrey:
+                    pred.lastSeenPrey = None
+
                 #print("ok")
                 #print(self.actor_controllerList[caught].gridID)
                 #print(pred.gridID)
@@ -299,6 +331,10 @@ class EnvironmentActorController(EnvironmentController):
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             smallest = min(distList)
             closestActor = self.actor_controllerList[distList.index(smallest)]
+
+            #A prey that got close, but not caught is a good prey
+            if closestActor.preyPred == 'prey':
+                actor.lastSeenPrey = closestActor.id
 
             closestVector =  np.array(closestActor.bodyPos[:2]) - np.array(actor.bodyPos[:2])
 
