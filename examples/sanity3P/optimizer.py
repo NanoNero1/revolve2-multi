@@ -253,7 +253,18 @@ class EnvironmentActorController(EnvironmentController):
             predList = self.predList["actor"]
             posList = [other.bodyPos for other in predList]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
-            smallest = minheadless
+            smallest = min(distList)
+            closestPrey = self.actor_controllerList[(predList.iloc[distList.index(smallest)]).id]
+
+            secondBest = closestPrey.weights
+            actor.preyPred = "prey"
+            bestPred = self.bestGenotype("prey")
+
+            #Update the actor dataframe
+            self.actFrame.loc[id,"preyPred"] = "prey"
+            #joe = 1
+            #print('joe2')
+            #print('doh')
 
 
         #Generation of new weights
@@ -301,6 +312,9 @@ class EnvironmentActorController(EnvironmentController):
                 #if caught == pred.lastSeenPrey:
                 #    pred.lastSeenPrey = None
 
+
+                #A good predator can be born again
+                pred.timeBorn = (datetime.now().timestamp())
                 #print("ok")
                 #print(self.actor_controllerList[caught].gridID)
                 #print(pred.gridID)
@@ -329,7 +343,6 @@ class EnvironmentActorController(EnvironmentController):
             viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn > self.currTime + 20) or (other.preyPred == 'pred'))), self.actor_controllerList))
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
-            #apparently this is broken? could be that we get to a state where all fails? but this cant be????
             smallest = min(distList)
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
 
