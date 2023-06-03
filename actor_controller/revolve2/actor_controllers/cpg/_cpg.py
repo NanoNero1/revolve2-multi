@@ -146,6 +146,8 @@ class CpgActorController(ActorController):
         x[mask] = np.exp(x[mask])-1
         return x
     
+
+    
     #Momentum allows the steering to happen gradually rather than quick flicks
     def calcMomentum(self,scaleD):
         #scaleD is expected to be between 0 and 1
@@ -160,19 +162,21 @@ class CpgActorController(ActorController):
         temp = input.copy()
         for weight, bias in zip(weights[0],weights[1]):
             temp = np.dot(temp, weight)+bias
-            temp = self.np_elu(temp)
+            #temp = self.np_elu(temp)
+            temp = np.tanh(temp)
         return temp
     
     def makeCognitiveOutput(self,ang,dist,tag):
         #There might be some reference issue here, check me
         output = list(self.model_pred(np.array([ang,dist,tag]),self.weights)).copy()
-        self.tarA = output[0]
-
-        tagRaw = np.clip(output[1],a_min=-1,a_max=1)*math.pi
-        if tagRaw > 0.33:
+        #self.tarA = output[0]*math.pi
+        
+        sigged = 1/(1 + np.exp(-output[0]))
+        LR = 1 if output[1] > 0 else -1
+        self.tarA = sigged*LR*math.pi
+        tagRaw = np.clip(output[2],a_min=-1,a_max=1)
+        if tagRaw > 0:
             tagRaw = 1
-        elif tagRaw > -0.33:
-            tagRaw = 0
         else:
             tagRaw = -1
         #self.tag = output[1]

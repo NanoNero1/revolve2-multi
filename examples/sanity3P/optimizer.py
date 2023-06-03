@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,3,4,2]
+        self.configuration = [3,3,3,3]
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -79,6 +79,7 @@ class EnvironmentActorController(EnvironmentController):
         self.lastTime = (datetime.now().timestamp())
         self.currTime = (datetime.now().timestamp())
         self.simStartTime = (datetime.now().timestamp())
+        self.predDeathTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
@@ -273,7 +274,7 @@ class EnvironmentActorController(EnvironmentController):
         #print(bestPred)
         #print('dd')
         #print(secondBest)
-        if np.random.uniform(0.0,1.0) < 0.7:
+        if np.random.uniform(0.0,1.0) < 0.85:
             crossedOver = self.myCrossover(bestPred,secondBest)
             #print("ddd")
             #print(crossedOver)
@@ -341,21 +342,22 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 0:
+        if len(self.predList) > 5 and (self.currTime - 50 > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
             predID = self.predList["lifeTime"].idxmin()
-
+            self.switchBrain(predID)
+            self.predDeathTime = (datetime.now().timestamp())
             #Main Conditional
-            if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
-                    #print(wenthere)
-                    self.switchBrain(predID)
+            #if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
+            #        #print(wenthere)
+            #        self.switchBrain(predID)
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
         for ind,actor in enumerate(self.actor_controllerList):
-            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn > self.currTime + 20) or (other.preyPred == 'pred'))), self.actor_controllerList))
+            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - 20) or (other.preyPred == 'pred'))), self.actor_controllerList))
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             smallest = min(distList)
@@ -383,7 +385,7 @@ class EnvironmentActorController(EnvironmentController):
 
             #Normalizing inputs
             angle = angle / math.pi
-            smallest = np.clip(smallest,-3,3) / 3
+            smallest = np.clip(smallest,-5,5) / 5
 
             actor.makeCognitiveOutput(angle,smallest,closestActor.tag)
 
@@ -395,7 +397,7 @@ class EnvironmentActorController(EnvironmentController):
         
         if predsLeft > 3:
             #currently set to a linear scale
-            return (40-predsLeft)*4
+            return (40-predsLeft)*20
         else:
             return 1000000000
 
@@ -407,8 +409,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = (self.actorStates[id].position)
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 0.5)
-        y = round(position[1] * 0.5)
+        x = round(position[0] * 0.2)
+        y = round(position[1] * 0.2)
         return (x, y)
     
     #Get the oldest genotypes
