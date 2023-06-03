@@ -407,8 +407,8 @@ class EnvironmentActorController(EnvironmentController):
     def get_grid_Tup(self, id):
         position = (self.actorStates[id].position)
         #NEED FIX: I dont super understand why its messing up with values other than 10
-        x = round(position[0] * 0.2)
-        y = round(position[1] * 0.2)
+        x = round(position[0] * 0.5)
+        y = round(position[1] * 0.5)
         return (x, y)
     
     #Get the oldest genotypes
