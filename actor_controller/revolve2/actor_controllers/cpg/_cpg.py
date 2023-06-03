@@ -73,6 +73,7 @@ class CpgActorController(ActorController):
         self.lastKiller = None
         self.momentum = 0
         self.lastSeenPrey = None
+        self.lifeTime = datetime.now().timestamp()
 
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):

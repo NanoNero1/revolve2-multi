@@ -70,10 +70,10 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,3,2]
+        self.configuration = [3,3,4,2]
 
         #This list is for accessing all the actors in a dataframe
-        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','gridID','lastKiller'])
+        self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
         self.actFrame.set_index('id')
 
         self.lastTime = (datetime.now().timestamp())
@@ -88,7 +88,8 @@ class EnvironmentActorController(EnvironmentController):
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-            list_row = [ind,actor,actor.preyPred,actor.timeBorn,(0,0),actor.lastKiller]
+            #gridID = self.get_grid_Tup(actor.id)
+            list_row = [ind,actor,actor.preyPred,actor.timeBorn,actor.lifeTime,(0,0),actor.lastKiller]
             self.actFrame.loc[len(self.actFrame)] = list_row
 
             self.actorCount += 1
@@ -211,8 +212,8 @@ class EnvironmentActorController(EnvironmentController):
             self.lastTime = (self.currTime)   
 
         #Loop for data collection
-        if float(self.currTime - self.lastTime) > 0.3:
-            raAct = randint(0,0)
+        #if float(self.currTime - self.lastTime) > 0.3:
+            #raAct = randint(0,0)
             ##actor = self.actor_controllerList[raAct]
 
             ##datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
@@ -285,11 +286,17 @@ class EnvironmentActorController(EnvironmentController):
         #    lol = 0
         #else:
         #    diddit
+        #print("f")
+        #print(actor.lifeTime)
+        #print(actor.timeBorn)
+
         itsNow = datetime.now().timestamp()
         actor.timeBorn = itsNow
+        actor.lifeTime = itsNow
 
         #Update the actor dataframe's time
         self.actFrame.loc[id,"timeBorn"] = itsNow
+        self.actFrame.loc[id,"lifeTime"] = itsNow
         self.updPreyPred()
 
     #Handles the mechanics of who gets caught and who dies out
@@ -314,7 +321,11 @@ class EnvironmentActorController(EnvironmentController):
 
 
                 #A good predator can be born again
-                pred.timeBorn = (datetime.now().timestamp())
+                ##pred.timeBorn = (datetime.now().timestamp())
+                itsNow = (datetime.now().timestamp())
+                pred.lifeTime = itsNow
+                self.actFrame.loc[pred.id,"lifeTime"] = itsNow
+
                 #print("ok")
                 #print(self.actor_controllerList[caught].gridID)
                 #print(pred.gridID)
@@ -322,6 +333,9 @@ class EnvironmentActorController(EnvironmentController):
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
                 self.actor_controllerList[caught].lastKiller = pred.id
+                
+                
+                
                 self.updPreyPred()
             else:
                 lol = 0
@@ -329,8 +343,9 @@ class EnvironmentActorController(EnvironmentController):
         #Handles Death of Predator
         if len(self.predList) > 0:
             #print(self.predList["timeBorn"])
-            minTime = min(self.predList["timeBorn"])
-            predID = self.predList["timeBorn"].idxmin()
+
+            minTime = min(self.predList["lifeTime"])
+            predID = self.predList["lifeTime"].idxmin()
 
             #Main Conditional
             if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
