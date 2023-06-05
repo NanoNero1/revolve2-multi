@@ -72,7 +72,7 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [3,3,4,3]
 
-        self.preyImm = 40
+        self.preyImm = 100
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -336,7 +336,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 3:
+            if smallest < 4:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
@@ -372,7 +372,7 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 5 and (self.currTime - 50 > self.predDeathTime):
+        if len(self.predList) > 3 and (self.currTime - 30 > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
@@ -795,7 +795,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 40
+            numberAGENTS = 30
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
