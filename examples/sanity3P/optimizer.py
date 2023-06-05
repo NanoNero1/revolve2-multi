@@ -336,7 +336,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 4:
+            if smallest < 4 and smallest > 1:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
