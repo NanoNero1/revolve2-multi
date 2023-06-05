@@ -72,6 +72,8 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [3,3,4,3]
 
+        self.preyImm = 40
+
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
         self.actFrame.set_index('id')
@@ -198,17 +200,20 @@ class EnvironmentActorController(EnvironmentController):
             actor.step(dt)
             actor_control.set_dof_targets(ind, actor.get_dof_targets())
 
-        self.updateGrid()
+        
 
         ## Time Based Section - doesnt update on every loop
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 2:
+            self.positionMap()
+            self.updateGrid()
+            
             self.cognitiveActors(self.actorStates)
             ##self.writeMyCSV()
             #print(f"prey: %s" % self.preyList.index)
             #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
-            self.positionMap()
+            
             #print((self.actor_controllerList[0]).weights)
             self.lastTime = (self.currTime)   
 
@@ -243,7 +248,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 secondBest = self.new_denseWeights(self.configuration)
             actor.preyPred = "pred"
-            bestPred = self.bestGenotype("pred")
+            bestGeno = self.bestGenotype("pred")
 
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "pred"
@@ -252,15 +257,15 @@ class EnvironmentActorController(EnvironmentController):
         else:
             #actor = self.actor_controllerList[self.predList[id]]
             #secondBest = self.new_denseWeights(self.configuration)
-            predList = self.predList["actor"]
-            posList = [other.bodyPos for other in predList]
+            preyList = self.preyList["actor"]
+            posList = [other.bodyPos for other in preyList]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             smallest = min(distList)
-            closestPrey = self.actor_controllerList[(predList.iloc[distList.index(smallest)]).id]
+            closestPrey = self.actor_controllerList[(preyList.iloc[distList.index(smallest)]).id]
 
             secondBest = closestPrey.weights
             actor.preyPred = "prey"
-            bestPred = self.bestGenotype("prey")
+            bestGeno = self.bestGenotype("prey")
 
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "prey"
@@ -270,12 +275,12 @@ class EnvironmentActorController(EnvironmentController):
 
 
         #Generation of new weights
-        actor.weights = self.mutateWeights(bestPred,self.configuration)
+        #actor.weights = self.mutateWeights(bestPred,self.configuration)
         #print(bestPred)
         #print('dd')
         #print(secondBest)
         if np.random.uniform(0.0,1.0) < 0.85:
-            crossedOver = self.myCrossover(bestPred,secondBest)
+            crossedOver = self.myCrossover(bestGeno,secondBest)
             #print("ddd")
             #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
@@ -306,14 +311,39 @@ class EnvironmentActorController(EnvironmentController):
         self.updateActFrame()
         self.updPreyPred()
 
+        #THIS IS PROBABLY WHERE IT SLOWS DOWN
         #Handles Death of Prey
+
+
+        
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
             if caught != None or len(self.preyList.index) < 2:
                 break
-            caughtList = pyL[(pyL["gridID"] == pred.gridID) & (pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - 20)]
-            caught = caughtList.index[0] if len(caughtList) > 0 else None
+
+            #Separate theseeeee
+            #caughtList = pyL[(pyL["gridID"] == pred.gridID) & (pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - 20)]
+            caughtList = pyL[(pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - self.preyImm)]
+            
+            #Distance based Implementation
+            preyList = caughtList["actor"]
+            posList = [other.bodyPos for other in preyList]
+            distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
+            
+            if len(distList) > 0:
+                smallest = min(distList)
+            else:
+                smallest = 1000
+
+            if smallest < 3:
+                #print(smallest)
+                #print(pred.id)
+                caught = (preyList.iloc[distList.index(smallest)]).id
+                #print(caught)
+
+
+            #caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
                 
                 #If a prey got close, but caught, it is a bad prey
@@ -357,9 +387,10 @@ class EnvironmentActorController(EnvironmentController):
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
         for ind,actor in enumerate(self.actor_controllerList):
-            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - 20) or (other.preyPred == 'pred'))), self.actor_controllerList))
+            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
+            # I NEED TO FIX THIS make smallest huuuuge
             smallest = min(distList)
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
 
