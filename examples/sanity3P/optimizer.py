@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,3,4,3]
+        self.configuration = [3,4,3]
 
         self.preyImm = 100
 
@@ -319,7 +319,7 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None or len(self.preyList.index) < 2:
+            if caught != None or len(self.preyList.index) < 4:
                 break
 
             #Separate theseeeee
@@ -336,7 +336,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 4 and smallest > 2:
+            if smallest < 4 and smallest > 0.5:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
@@ -416,9 +416,22 @@ class EnvironmentActorController(EnvironmentController):
 
             #Normalizing inputs
             angle = angle / math.pi
-            smallest = np.clip(smallest,-5,5) / 5
-
-            actor.makeCognitiveOutput(angle,smallest,closestActor.tag)
+            #smallest = np.clip(smallest,-5,5) / 5
+            angleMag = abs(angle)
+            if angle > 0:
+                LR = 1
+            else:
+                LR = -1
+            
+            print(actor.bodyA)
+            print(standardAngle)
+            print(angle)
+            print(angleMag)
+            print(LR)
+            print(actor.id)
+            print(closestActor.id)
+            dd
+            actor.makeCognitiveOutput(LR,angleMag,closestActor.tag)
 
             #(self.actorStates[0].position)[:2]
 
