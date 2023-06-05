@@ -279,7 +279,7 @@ class EnvironmentActorController(EnvironmentController):
         #print(bestPred)
         #print('dd')
         #print(secondBest)
-        if np.random.uniform(0.0,1.0) < 0.85:
+        if np.random.uniform(0.0,1.0) < 0.7:
             crossedOver = self.myCrossover(bestGeno,secondBest)
             #print("ddd")
             #print(crossedOver)
@@ -336,7 +336,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 4 and smallest > 1:
+            if smallest < 4 and smallest > 2:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
@@ -829,7 +829,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
                     )
                 )    
             batch.environments.append(env)
-
+        #batch_results = await self._runner.
         batch_results = await self._runner.run_batch(batch)
 
         return [

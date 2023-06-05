@@ -240,7 +240,7 @@ class LocalRunner(Runner):
                     sample_step,
                     batch.simulation_time,
                 )
-                for env_index, env_descr in enumerate(batch.environments)
+                for env_index, env_descr in enumerate([batch.environments[0]])
             ]
             results = BatchResults([future.result() for future in futures])
 
