@@ -69,7 +69,7 @@ class CpgActorController(ActorController):
 
         self.timeBorn = datetime.now().timestamp()
         self.lastTime = self.timeBorn
-        self.tag = 0
+        self.tag = 1
         self.lastKiller = None
         self.momentum = 0
         self.lastSeenPrey = None
@@ -161,16 +161,25 @@ class CpgActorController(ActorController):
     def model_pred(self,input, weights):
         temp = input.copy()
         for weight, bias in zip(weights[0],weights[1]):
-            temp = np.dot(temp, weight)+bias
+            #print("i")
+            #print(temp)
+            #print(weight)
+            #print(bias)
+            temp = np.dot(temp, weight)+(bias)
+            #print("f")
+            #print(temp)
             #temp = self.np_elu(temp)
             temp = np.tanh(temp)
+            #print("c")
+            #print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,dist,tag):
+    def makeCognitiveOutput(self,ang,tag):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,dist,tag]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,tag]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
-        
+        #print(output)
+        #cut
         sigged = 1/(1 + np.exp(-output[0]))
         LR = 1 if output[1] > 0 else -1
         self.tarA = sigged*LR*math.pi

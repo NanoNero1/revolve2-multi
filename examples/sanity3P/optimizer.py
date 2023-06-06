@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,4,3]
+        self.configuration = [2,4,3]
 
         self.preyImm = 100
 
@@ -144,7 +144,7 @@ class EnvironmentActorController(EnvironmentController):
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
-    def mutateWeights(self,weights,config,alpha=0.1):
+    def mutateWeights(self,weights,config,alpha=0.05):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
@@ -391,7 +391,10 @@ class EnvironmentActorController(EnvironmentController):
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             # I NEED TO FIX THIS make smallest huuuuge
-            smallest = min(distList)
+            if len(distList) > 0:
+                smallest = min(distList)
+            else:
+                continue
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
 
             #A prey that got close, but not caught is a good prey
@@ -415,24 +418,25 @@ class EnvironmentActorController(EnvironmentController):
             #print(tag)
 
             #Normalizing inputs
-            angle = angle / math.pi
+            #angle = angle / math.pi
             #smallest = np.clip(smallest,-5,5) / 5
-            angleMag = abs(angle)
+            angleMag = abs(angle) / math.pi
             if angle > 0:
                 LR = 1
             else:
                 LR = -1
             
-            print(actor.bodyA)
-            print(standardAngle)
-            print(angle)
-            print(angleMag)
-            print(LR)
-            print(actor.id)
-            print(closestActor.id)
-            dd
-            actor.makeCognitiveOutput(LR,angleMag,closestActor.tag)
-
+            angleNorm = angle / math.pi
+            #print(actor.bodyA)
+            #print(standardAngle)
+            #print(angle)
+            #print(angleMag)
+            #print(LR)
+            #print(actor.id)
+            #print(closestActor.id)
+            #dd
+            actor.makeCognitiveOutput(angleNorm,closestActor.tag)
+            #actor.makeCognitiveOutput(0,0)
             #(self.actorStates[0].position)[:2]
 
     #Get the LifeSpan of 
