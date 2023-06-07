@@ -373,7 +373,7 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 7 and (self.currTime - 20 > self.predDeathTime):
+        if len(self.predList) > 7 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
@@ -389,7 +389,7 @@ class EnvironmentActorController(EnvironmentController):
             #        self.switchBrain(predID)
 
         #A Random Prey May Die
-        if len(self.preyList) > 7 and (self.currTime - 60 > self.preyDeathTime):
+        if len(self.preyList) > 7 and (self.currTime - self.preylifeSpan() > self.preyDeathTime):
             #minTime = min(self.preyList["lifeTime"])
             
             #preyID = self.preyList["lifeTime"].idxmin() 
@@ -458,7 +458,16 @@ class EnvironmentActorController(EnvironmentController):
         
         if predsLeft > 3:
             #currently set to a linear scale
-            return (40-predsLeft)*20
+            return 70 - predsLeft*2
+        else:
+            return 1000000000
+        
+    def preylifeSpan(self):
+        preysLeft = len(self.preyList)
+        
+        if preysLeft > 3:
+            #currently set to a linear scale
+            return 90 - 2*preysLeft
         else:
             return 1000000000
 
