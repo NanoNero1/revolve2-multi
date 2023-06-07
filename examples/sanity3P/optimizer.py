@@ -72,7 +72,7 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [2,4,3]
 
-        self.preyImm = 100
+        self.preyImm = 50
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -82,6 +82,7 @@ class EnvironmentActorController(EnvironmentController):
         self.currTime = (datetime.now().timestamp())
         self.simStartTime = (datetime.now().timestamp())
         self.predDeathTime = (datetime.now().timestamp())
+        self.preyDeathTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
@@ -99,7 +100,7 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'simTime', 'position','angle','predprey', 'tag']
+        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID"]
         data = [
             ['Albania', 28748, 'AL', 'ALB',1],
             ['Algeria', 2381741, 'DZ', 'DZA',1],
@@ -205,7 +206,7 @@ class EnvironmentActorController(EnvironmentController):
         ## Time Based Section - doesnt update on every loop
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 2:
-            self.positionMap()
+            
             self.updateGrid()
             
             self.cognitiveActors(self.actorStates)
@@ -213,7 +214,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(f"prey: %s" % self.preyList.index)
             #print(f"pred: %s" % self.predList.index)
             #print(self.actFrame.iloc[0])
-            
+            self.positionMap()
             #print((self.actor_controllerList[0]).weights)
             self.lastTime = (self.currTime)   
 
@@ -279,7 +280,7 @@ class EnvironmentActorController(EnvironmentController):
         #print(bestPred)
         #print('dd')
         #print(secondBest)
-        if np.random.uniform(0.0,1.0) < 0.7:
+        if np.random.uniform(0.0,1.0) < 0.8:
             crossedOver = self.myCrossover(bestGeno,secondBest)
             #print("ddd")
             #print(crossedOver)
@@ -319,7 +320,7 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None or len(self.preyList.index) < 4:
+            if caught != None or len(self.preyList.index) < 8:
                 break
 
             #Separate theseeeee
@@ -336,7 +337,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 4 and smallest > 0.5:
+            if smallest < 2 and smallest > 0.5:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
@@ -372,17 +373,29 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 3 and (self.currTime - 30 > self.predDeathTime):
+        if len(self.predList) > 7 and (self.currTime - 20 > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
             predID = self.predList["lifeTime"].idxmin()
+            #print(self.predList.index)
+            #print(predID)
+            #haha
             self.switchBrain(predID)
             self.predDeathTime = (datetime.now().timestamp())
             #Main Conditional
             #if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
             #        #print(wenthere)
             #        self.switchBrain(predID)
+
+        #A Random Prey May Die
+        if len(self.preyList) > 7 and (self.currTime - 60 > self.preyDeathTime):
+            #minTime = min(self.preyList["lifeTime"])
+            
+            #preyID = self.preyList["lifeTime"].idxmin() 
+            preyID = random.choice(self.preyList.index)
+            self.switchBrain(preyID)
+            self.preyDeathTime = (datetime.now().timestamp())
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
@@ -396,7 +409,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 continue
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
-
+            actor.closestID = closestActor.id
             #A prey that got close, but not caught is a good prey
             #if closestActor.preyPred == 'prey':
             #    actor.lastSeenPrey = closestActor.weights
@@ -526,7 +539,7 @@ class EnvironmentActorController(EnvironmentController):
             simTime = self.currTime - self.simStartTime
             # write multiple rows
             for actor in self.actor_controllerList:
-                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag] 
+                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID] 
                 writer.writerow(newDataLine)
 
     def deathBornCSV(self,id,preyPred,timeBorn):
@@ -812,7 +825,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 30
+            numberAGENTS = 40
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()
@@ -836,8 +849,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                np.random.uniform(-1.0,1.0)*15*1,
-                                np.random.uniform(-1.0,1.0)*15*1,
+                                np.random.uniform(-1.0,1.0)*9*1,
+                                np.random.uniform(-1.0,1.0)*9*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),

@@ -71,6 +71,7 @@ class CpgActorController(ActorController):
         self.lastTime = self.timeBorn
         self.tag = 1
         self.lastKiller = None
+        self.closestID = 0
         self.momentum = 0
         self.lastSeenPrey = None
         self.lifeTime = datetime.now().timestamp()
