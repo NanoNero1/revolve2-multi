@@ -72,7 +72,7 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [2,4,3,2]
 
-        self.preyImm = 50
+        self.preyImm = 70
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -337,7 +337,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 1.5 and smallest > 0.2:
+            if smallest < 1 and smallest > 0.2:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id

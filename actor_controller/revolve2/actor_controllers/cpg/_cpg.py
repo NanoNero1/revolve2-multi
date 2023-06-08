@@ -178,12 +178,16 @@ class CpgActorController(ActorController):
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
-        sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
+        #sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
+        #print(output)
+        sigged = (abs(output[0])**3)*np.sign(output[0])
+        #sigged = np.arctanh(output[0])
+        #print(sigged)
         #LR = 1 if output[1] > 0 else -1
         #self.tarA = sigged*LR
-        
+
         ###this helps remove the crazier movements
-        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.1),a_max=(self.tarA + 0.1))
+        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.05),a_max=(self.tarA + 0.05))
         tagRaw = np.clip(output[1],a_min=-1,a_max=1)
         if tagRaw > 0:
             tagRaw = 1
