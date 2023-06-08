@@ -163,9 +163,6 @@ class CpgActorController(ActorController):
         temp = input.copy()
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
-            #print(temp)
-            #print(weight)
-            #print(bias)
             temp = np.dot(temp, weight)+(bias)
             #print("f")
             #print(temp)
@@ -181,10 +178,13 @@ class CpgActorController(ActorController):
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
-        sigged = 1/(1 + np.exp(-output[0]))
-        LR = 1 if output[1] > 0 else -1
-        self.tarA = sigged*LR*math.pi
-        tagRaw = np.clip(output[2],a_min=-1,a_max=1)
+        sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
+        #LR = 1 if output[1] > 0 else -1
+        #self.tarA = sigged*LR
+        
+        ###this helps remove the crazier movements
+        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.1),a_max=(self.tarA + 0.1))
+        tagRaw = np.clip(output[1],a_min=-1,a_max=1)
         if tagRaw > 0:
             tagRaw = 1
         else:

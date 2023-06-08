@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,4,3]
+        self.configuration = [2,4,3,2]
 
         self.preyImm = 50
 
@@ -337,7 +337,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 2 and smallest > 0.5:
+            if smallest < 1.5 and smallest > 0.2:
                 #print(smallest)
                 #print(pred.id)
                 caught = (preyList.iloc[distList.index(smallest)]).id
@@ -458,7 +458,7 @@ class EnvironmentActorController(EnvironmentController):
         
         if predsLeft > 3:
             #currently set to a linear scale
-            return 70 - predsLeft*2
+            return 60 - predsLeft*2
         else:
             return 1000000000
         
