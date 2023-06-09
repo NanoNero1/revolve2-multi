@@ -244,8 +244,9 @@ class EnvironmentActorController(EnvironmentController):
             #actor = self.actor_controllerList[self.preyList[id]]
             #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
              
-            if actor.lastKiller != None:
-                secondBest = self.actor_controllerList[actor.lastKiller].weights
+            if actor.lastPredWeights != None:
+                #secondBest = self.actor_controllerList[actor.lastKiller].weights
+                secondBest = actor.lastPredWeights
             else:
                 secondBest = self.new_denseWeights(self.configuration)
             actor.preyPred = "pred"
@@ -304,6 +305,7 @@ class EnvironmentActorController(EnvironmentController):
         #Update the actor dataframe's time
         self.actFrame.loc[id,"timeBorn"] = itsNow
         self.actFrame.loc[id,"lifeTime"] = itsNow
+        self.updateActFrame()
         self.updPreyPred()
 
     #Handles the mechanics of who gets caught and who dies out
@@ -320,7 +322,8 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
         for pred in self.predList["actor"]:
-            if caught != None or len(self.preyList.index) < 8:
+            caught = None
+            if len(self.preyList.index) < 8:
                 break
 
             #Separate theseeeee
@@ -361,6 +364,7 @@ class EnvironmentActorController(EnvironmentController):
                 #print("ok")
                 #print(self.actor_controllerList[caught].gridID)
                 #print(pred.gridID)
+                (self.actor_controllerList[caught]).lastPredWeights = pred.weights
                 self.switchBrain(caught)
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
@@ -491,7 +495,9 @@ class EnvironmentActorController(EnvironmentController):
         if preyPred == "prey":
             genoID = self.preyList['timeBorn'].idxmin()       
         else:
-            genoID = self.predList['timeBorn'].idxmin()
+            #genoID = self.predList['timeBorn'].idxmin()
+            #A random lucky predator gets selected to reproduce
+            genoID = random.choice(self.predList.index) 
 
         return (self.actor_controllerList[genoID]).weights
 
