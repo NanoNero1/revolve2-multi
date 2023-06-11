@@ -72,7 +72,7 @@ class EnvironmentActorController(EnvironmentController):
         self.modelList = []
         self.configuration = [2,4,3,2]
 
-        self.preyImm = 70
+        self.preyImm = 30
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -244,6 +244,8 @@ class EnvironmentActorController(EnvironmentController):
             #actor = self.actor_controllerList[self.preyList[id]]
             #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
              
+
+
             if actor.lastPredWeights != None:
                 #secondBest = self.actor_controllerList[actor.lastKiller].weights
                 bestGeno = actor.lastPredWeights
@@ -362,7 +364,7 @@ class EnvironmentActorController(EnvironmentController):
 
             #caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
-                
+                #print(caught)
                 #If a prey got close, but caught, it is a bad prey
                 #if caught == pred.lastSeenPrey:
                 #    pred.lastSeenPrey = None
@@ -386,6 +388,7 @@ class EnvironmentActorController(EnvironmentController):
                 
                 
                 self.updPreyPred()
+                pyL = self.preyList
             else:
                 lol = 0
 
@@ -395,6 +398,8 @@ class EnvironmentActorController(EnvironmentController):
 
             minTime = min(self.predList["lifeTime"])
             predID = self.predList["lifeTime"].idxmin()
+            #print(self.predList["lifeTime"])
+            #print(predID)
             #print(self.predList.index)
             #print(predID)
             #haha
