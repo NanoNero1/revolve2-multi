@@ -246,11 +246,11 @@ class EnvironmentActorController(EnvironmentController):
              
             if actor.lastPredWeights != None:
                 #secondBest = self.actor_controllerList[actor.lastKiller].weights
-                secondBest = actor.lastPredWeights
+                bestGeno = actor.lastPredWeights
             else:
-                secondBest = self.new_denseWeights(self.configuration)
+                bestGeno = self.new_denseWeights(self.configuration)
             actor.preyPred = "pred"
-            bestGeno = self.bestGenotype("pred")
+            secondBest = self.bestGenotype("pred")
 
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "pred"
@@ -281,10 +281,14 @@ class EnvironmentActorController(EnvironmentController):
         #print(bestPred)
         #print('dd')
         #print(secondBest)
-        if np.random.uniform(0.0,1.0) < 0.8:
-            crossedOver = self.myCrossover(bestGeno,secondBest)
-            #print("ddd")
-            #print(crossedOver)
+        reproChance = np.random.uniform(0.0,1.0)
+        if reproChance < 0.9:
+            if reproChance < 0.7:
+                crossedOver = bestGeno
+            else:
+                crossedOver = self.myCrossover(bestGeno,secondBest)
+                #print("ddd")
+                #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
         else:
             actor.weights = self.new_denseWeights(self.configuration)
@@ -321,7 +325,16 @@ class EnvironmentActorController(EnvironmentController):
         
         caught = None
         pyL = self.preyList
-        for pred in self.predList["actor"]:
+
+        pdIndexes = [i for i in range(len(self.predList["actor"]))]
+        #l_shuffled = random.sample(self.predList["actor"], len(self.predList["actor"]))
+        l_shuffled = random.sample(pdIndexes, len(pdIndexes))
+        #print(l_shuffled)
+        #print('lol')
+        #print([i.id for i in self.predList["actor"]])
+        #print([i.id for i in self.preyList["actor"]])
+        for predIND in l_shuffled:
+            pred = self.predList["actor"].iloc[predIND]
             caught = None
             if len(self.preyList.index) < 8:
                 break
@@ -493,11 +506,18 @@ class EnvironmentActorController(EnvironmentController):
         self.updPreyPred()
         
         if preyPred == "prey":
-            genoID = self.preyList['timeBorn'].idxmin()       
+            #genoID = self.preyList['timeBorn'].idxmin()
+            bestDist = 0
+            for prey in self.preyList['actor']:
+                closestPos = (self.actor_controllerList[prey.closestID]).bodyPos
+                closestDist = (prey.bodyPos[0] - closestPos[0])**2 + (prey.bodyPos[1] - closestPos[1])**2  
+                if closestDist > bestDist:
+                    bestDist = closestDist
+                    genoID = prey.closestID      
         else:
-            #genoID = self.predList['timeBorn'].idxmin()
+            genoID = self.predList['timeBorn'].idxmin()
             #A random lucky predator gets selected to reproduce
-            genoID = random.choice(self.predList.index) 
+            #genoID = random.choice(self.predList.index) 
 
         return (self.actor_controllerList[genoID]).weights
 
