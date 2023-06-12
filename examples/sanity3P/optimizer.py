@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,4,3,2]
+        self.configuration = [2,4,2]
 
         self.preyImm = 30
 
@@ -145,7 +145,7 @@ class EnvironmentActorController(EnvironmentController):
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
-    def mutateWeights(self,weights,config,alpha=0.05):
+    def mutateWeights(self,weights,config,alpha=0.02):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
@@ -284,13 +284,10 @@ class EnvironmentActorController(EnvironmentController):
         #print('dd')
         #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
-        if reproChance < 0.9:
-            if reproChance < 0.7:
-                crossedOver = bestGeno
-            else:
-                crossedOver = self.myCrossover(bestGeno,secondBest)
-                #print("ddd")
-                #print(crossedOver)
+        if reproChance < 0.8:
+            crossedOver = self.myCrossover(bestGeno,secondBest)
+            #print("ddd")
+            #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
         else:
             actor.weights = self.new_denseWeights(self.configuration)
@@ -889,8 +886,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                np.random.uniform(-1.0,1.0)*9*1,
-                                np.random.uniform(-1.0,1.0)*9*1,
+                                np.random.uniform(-1.0,1.0)*15*1,
+                                np.random.uniform(-1.0,1.0)*15*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),

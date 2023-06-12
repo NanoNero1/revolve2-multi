@@ -169,7 +169,8 @@ class CpgActorController(ActorController):
             #print("f")
             #print(temp)
             #temp = self.np_elu(temp)
-            temp = np.tanh(temp)
+            #temp = np.tanh(temp)
+            temp = ((1/(1 + np.exp(-3*temp))) - 0.5)*2
             #print("c")
             #print(temp)
         return temp
@@ -182,14 +183,15 @@ class CpgActorController(ActorController):
         #cut
         #sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
         #print(output)
-        sigged = (abs(output[0])**3)*np.sign(output[0])
+        sigged = (abs(output[0])**2)*np.sign(output[0])
+        #sigged = output[0]
         #sigged = np.arctanh(output[0])
         #print(sigged)
         #LR = 1 if output[1] > 0 else -1
         #self.tarA = sigged*LR
 
         ###this helps remove the crazier movements
-        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.05),a_max=(self.tarA + 0.05))
+        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.03),a_max=(self.tarA + 0.03))
         tagRaw = np.clip(output[1],a_min=-1,a_max=1)
         if tagRaw > 0:
             tagRaw = 1
