@@ -70,9 +70,9 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,4,2]
+        self.configuration = [1,4,2]
 
-        self.preyImm = 30
+        self.preyImm = 10
 
         #This list is for accessing all the actors in a dataframe
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
@@ -145,7 +145,7 @@ class EnvironmentActorController(EnvironmentController):
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
-    def mutateWeights(self,weights,config,alpha=0.02):
+    def mutateWeights(self,weights,config,alpha=0.05):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
@@ -285,7 +285,11 @@ class EnvironmentActorController(EnvironmentController):
         #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
         if reproChance < 0.8:
-            crossedOver = self.myCrossover(bestGeno,secondBest)
+            #Randomize Crossover Order to make sure not smae weights in every place
+            if np.random.uniform(0.0,1.0) < 0.5:
+                crossedOver = self.myCrossover(bestGeno,secondBest)
+            else:
+                crossedOver = self.myCrossover(secondBest,bestGeno)
             #print("ddd")
             #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
@@ -406,9 +410,10 @@ class EnvironmentActorController(EnvironmentController):
             #if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
             #        #print(wenthere)
             #        self.switchBrain(predID)
-
+        
         #A Random Prey May Die
-        if len(self.preyList) > 7 and (self.currTime - self.preylifeSpan() > self.preyDeathTime):
+        #if Flen(self.preyList) > 7 and (self.currTime - self.preylifeSpan() > self.preyDeathTime):
+        if False:
             #minTime = min(self.preyList["lifeTime"])
             
             #preyID = self.preyList["lifeTime"].idxmin() 
@@ -419,7 +424,14 @@ class EnvironmentActorController(EnvironmentController):
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
         for ind,actor in enumerate(self.actor_controllerList):
-            viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
+            #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
+            
+            if actor.preyPred == "prey":
+                viableOther = [actor for actor in self.predList["actor"] ]
+            else:
+                viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) and (other.preyPred == 'prey'))), self.actor_controllerList))
+
+
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
             # I NEED TO FIX THIS make smallest huuuuge
@@ -467,7 +479,13 @@ class EnvironmentActorController(EnvironmentController):
             #print(actor.id)
             #print(closestActor.id)
             #dd
-            actor.makeCognitiveOutput(angleNorm,closestActor.tag)
+            isItPrey = 1 if closestActor.preyPred == "prey" else -1
+            #print(isItPrey)
+            actor.makeCognitiveOutput(angleNorm)
+            
+            #actor.tarA = angle if isItPrey == 1 else self.modusAng(angle - math.pi)
+
+            #actor.makeCognitiveOutput(angleNorm,closestActor.tag)
             #actor.makeCognitiveOutput(0,0)
             #(self.actorStates[0].position)[:2]
 
@@ -556,6 +574,13 @@ class EnvironmentActorController(EnvironmentController):
         if abs(modus) > math.pi:
             modus += -2*math.pi*np.sign(modus)
         return modus
+
+    def modusAng(self,ang):
+        phase = ang + math.pi
+        modused = (phase % (2*math.pi)) - math.pi
+        return modused
+
+
     ###
     # Utility Functions
     ###
@@ -886,8 +911,8 @@ class Optimizer(EAOptimizer[Genotype, float]):
                         actor,
                         Vector3(
                             [
-                                np.random.uniform(-1.0,1.0)*15*1,
-                                np.random.uniform(-1.0,1.0)*15*1,
+                                np.random.uniform(-1.0,1.0)*9*1,
+                                np.random.uniform(-1.0,1.0)*9*1,
                                 bounding_box.size.z / 2.0 - bounding_box.offset.z + i*0,
                             ]
                         ),

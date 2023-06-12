@@ -175,9 +175,9 @@ class CpgActorController(ActorController):
             #print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,tag):
+    def makeCognitiveOutput(self,ang):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,tag]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
