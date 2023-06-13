@@ -83,6 +83,10 @@ class CpgActorController(ActorController):
         self.id = id
         self.weights = weight_mat
         self.preyPred = preyPred
+        if self.preyPred == "prey":
+            self.immCheck = False
+        else:
+            self.immCheck = True
 
     def step(self, dt: float) -> None:
         """
