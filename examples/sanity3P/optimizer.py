@@ -432,10 +432,10 @@ class EnvironmentActorController(EnvironmentController):
             #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
             
             if actor.preyPred == "prey":
-                viableOther = [actor for actor in self.predList["actor"] ]
+                viableOther = [pred for pred in self.predList["actor"] if (actor.tag == pred.tag) ]
             else:
                 #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) and (other.preyPred == 'prey'))), self.actor_controllerList))
-                viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.immCheck) and (other.preyPred == 'prey'))), self.actor_controllerList))
+                viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and (actor.tag == other.tag) and ((other.immCheck) and (other.preyPred == 'prey'))), self.actor_controllerList))
 
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
