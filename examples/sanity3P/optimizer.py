@@ -100,7 +100,7 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID"]
+        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck"]
         data = [
             ['Albania', 28748, 'AL', 'ALB',1],
             ['Algeria', 2381741, 'DZ', 'DZA',1],
@@ -207,6 +207,18 @@ class EnvironmentActorController(EnvironmentController):
         self.currTime = (datetime.now().timestamp())
         if float(self.currTime - self.lastTime) > 2:
             
+
+            for actor in self.actor_controllerList:
+                if actor.immCheck == False and actor.preyPred == "prey":
+                    posList = [other.bodyPos for other in self.predList["actor"]]
+                    distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
+                    smallest = min(distList)
+                    if smallest > 3:
+                        actor.immCheck = True
+                    else:
+                        actor.timeBorn = self.currTime
+
+
             self.updateGrid()
             
             self.cognitiveActors(self.actorStates)
@@ -258,6 +270,7 @@ class EnvironmentActorController(EnvironmentController):
             self.actFrame.loc[id,"preyPred"] = "pred"
             #print('joe')
             #joe = 0
+            actor.immCheck = True
         else:
             #actor = self.actor_controllerList[self.predList[id]]
             #secondBest = self.new_denseWeights(self.configuration)
@@ -268,7 +281,10 @@ class EnvironmentActorController(EnvironmentController):
             smallest = min(distList)
             #closestPrey = self.actor_controllerList[(preyList.iloc[distList.index(smallest)]).id]
             closestPrey = preyList[distList.index(smallest)]
-            secondBest = closestPrey.weights
+            #secondBest = closestPrey.weights
+            genoID = list(random.choices(self.preyList.index, k=1, weights=(self.currTime - self.preyList['timeBorn']) ) )[0]
+            secondBest = (self.actor_controllerList[genoID]).weights
+
             actor.preyPred = "prey"
             bestGeno = self.bestGenotype("prey")
 
@@ -287,7 +303,7 @@ class EnvironmentActorController(EnvironmentController):
         #print('dd')
         #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
-        if reproChance < 0.8:
+        if reproChance < 0.4:
             #Randomize Crossover Order to make sure not smae weights in every place
             if np.random.uniform(0.0,1.0) < 0.5:
                 crossedOver = self.myCrossover(bestGeno,secondBest)
@@ -296,6 +312,8 @@ class EnvironmentActorController(EnvironmentController):
             #print("ddd")
             #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
+        elif reproChance < 0.8:
+            actor.weights = self.mutateWeights(bestGeno,self.configuration)
         else:
             actor.weights = self.new_denseWeights(self.configuration)
         #print("dddd")
@@ -360,7 +378,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 2 and smallest > 0.2:
+            if smallest < 2:
                 #print(smallest)
                 #print(pred.id)
                 #caught = (preyList.iloc[distList.index(smallest)]).id
@@ -435,7 +453,7 @@ class EnvironmentActorController(EnvironmentController):
                 viableOther = [pred for pred in self.predList["actor"] if (actor.tag == pred.tag) ]
             else:
                 #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) and (other.preyPred == 'prey'))), self.actor_controllerList))
-                viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and (actor.tag == other.tag) and ((other.immCheck) and (other.preyPred == 'prey'))), self.actor_controllerList))
+                viableOther = list(filter(lambda other: ((actor.tag == other.tag) and ((other.immCheck) and (other.preyPred == 'prey'))), self.actor_controllerList))
 
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
@@ -444,9 +462,6 @@ class EnvironmentActorController(EnvironmentController):
                 smallest = min(distList)
             else:
                 continue
-
-            if smallest > 3 and actor.preyPred == "prey" and actor.immCheck == False:
-                actor.immCheck = True
 
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
             actor.closestID = closestActor.id
@@ -550,7 +565,8 @@ class EnvironmentActorController(EnvironmentController):
         else:
             #genoID = self.predList['timeBorn'].idxmin()
             #A random lucky predator gets selected to reproduce
-            genoID = random.choice(self.predList.index) 
+            #genoID = random.choice(self.predList.index) 
+            genoID = list(random.choices(self.predList.index, k=1, weights=(self.currTime - self.predList['timeBorn']) ) )[0]
 
         return (self.actor_controllerList[genoID]).weights
 
@@ -614,7 +630,7 @@ class EnvironmentActorController(EnvironmentController):
             simTime = self.currTime - self.simStartTime
             # write multiple rows
             for actor in self.actor_controllerList:
-                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID] 
+                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck] 
                 writer.writerow(newDataLine)
 
     def deathBornCSV(self,id,preyPred,timeBorn):
