@@ -174,7 +174,7 @@ class CpgActorController(ActorController):
             #print(temp)
             #temp = self.np_elu(temp)
             #temp = np.tanh(temp)
-            temp = ((1/(1 + np.exp(-3*temp))) - 0.5)*2
+            temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
             #print("c")
             #print(temp)
         return temp

@@ -212,12 +212,6 @@ class EnvironmentActorController(EnvironmentController):
         
         self.currTime = (datetime.now().timestamp())
 
-        if float(self.currTime - self.lastTagTime) > 10:
-            print("whoa")
-            for actor in self.actor_controllerList:
-                actor.tag = actor.tempTag
-            self.tagTime = self.currTime
-
         if float(self.currTime - self.lastTime) > 2:
             
 
@@ -316,7 +310,7 @@ class EnvironmentActorController(EnvironmentController):
         #print('dd')
         #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
-        if reproChance < 0.4:
+        if reproChance < 0.2:
             #Randomize Crossover Order to make sure not smae weights in every place
             if np.random.uniform(0.0,1.0) < 0.5:
                 crossedOver = self.myCrossover(bestGeno,secondBest)
@@ -543,9 +537,9 @@ class EnvironmentActorController(EnvironmentController):
     def predatorlifeSpan(self):
         predsLeft = len(self.predList)
         
-        if predsLeft > 3:
+        if predsLeft > 2:
             #currently set to a linear scale
-            return 60 - predsLeft*2
+            return 50 - predsLeft*2
         else:
             return 1000000000
         
