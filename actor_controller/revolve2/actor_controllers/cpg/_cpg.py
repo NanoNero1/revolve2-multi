@@ -179,15 +179,16 @@ class CpgActorController(ActorController):
             #print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang):
+    def makeCognitiveOutput(self,ang,inDist,dumbo):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,inDist,dumbo]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
         #sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
         #print(output)
-        sigged = (abs(output[0])**2)*np.sign(output[0])
+        #sigged = (abs(output[0])**2)*np.sign(output[0])
+        sigged = output[0]
         #sigged = output[0]
         #sigged = np.arctanh(output[0])
         #print(sigged)

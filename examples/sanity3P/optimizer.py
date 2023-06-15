@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [1,4,2]
+        self.configuration = [3,2,2]
 
         self.preyImm = 10
 
@@ -83,6 +83,7 @@ class EnvironmentActorController(EnvironmentController):
         self.simStartTime = (datetime.now().timestamp())
         self.predDeathTime = (datetime.now().timestamp())
         self.preyDeathTime = (datetime.now().timestamp())
+        self.lastTagTime = (datetime.now().timestamp())
 
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
@@ -145,7 +146,7 @@ class EnvironmentActorController(EnvironmentController):
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
-    def mutateWeights(self,weights,config,alpha=0.05):
+    def mutateWeights(self,weights,config,alpha=0.1):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
@@ -203,8 +204,20 @@ class EnvironmentActorController(EnvironmentController):
 
         
 
+        ## 
+        
+
         ## Time Based Section - doesnt update on every loop
+
+        
         self.currTime = (datetime.now().timestamp())
+
+        if float(self.currTime - self.lastTagTime) > 10:
+            print("whoa")
+            for actor in self.actor_controllerList:
+                actor.tag = actor.tempTag
+            self.tagTime = self.currTime
+
         if float(self.currTime - self.lastTime) > 2:
             
 
@@ -213,7 +226,7 @@ class EnvironmentActorController(EnvironmentController):
                     posList = [other.bodyPos for other in self.predList["actor"]]
                     distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
                     smallest = min(distList)
-                    if smallest > 3:
+                    if smallest > 2:
                         actor.immCheck = True
                     else:
                         actor.timeBorn = self.currTime
@@ -360,7 +373,7 @@ class EnvironmentActorController(EnvironmentController):
         for predIND in l_shuffled:
             pred = self.predList["actor"].iloc[predIND]
             caught = None
-            if len(self.preyList.index) < 8:
+            if len(self.preyList.index) < 11:
                 break
 
             #Separate theseeeee
@@ -378,7 +391,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 2:
+            if smallest < 1.5:
                 #print(smallest)
                 #print(pred.id)
                 #caught = (preyList.iloc[distList.index(smallest)]).id
@@ -417,7 +430,7 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 7 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
+        if len(self.predList) > 10 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
@@ -479,7 +492,7 @@ class EnvironmentActorController(EnvironmentController):
             angle = self.goodAngle(actor.bodyA,standardAngle)
             #print(angle)
             #print(smallest)
-            dumbo = 2
+            dumbo = 0
             #This is where we can pass any cognitive information, 
             # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
             #tag = randint(0,9)
@@ -505,7 +518,18 @@ class EnvironmentActorController(EnvironmentController):
             #dd
             isItPrey = 1 if closestActor.preyPred == "prey" else -1
             #print(isItPrey)
-            actor.makeCognitiveOutput(angleNorm)
+
+            if smallest < 5:
+                inDist = smallest / 5
+            else:
+                inDist = 1
+
+            dumbo = 0
+            #You might be wondering why exactly are there 3 inputs, despite the methodology only saying 2
+            #Due to some numpy array problems I can't seem to fix, ive added in a dummy variable always set to 0
+            #So in the end it doesn't do anything, i.e., its still technically 2 inputs
+            actor.makeCognitiveOutput(angleNorm,inDist,LR)
+            #actor.tarA = angle
             
             #actor.tarA = angle if isItPrey == 1 else self.modusAng(angle - math.pi)
 
