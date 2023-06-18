@@ -222,7 +222,7 @@ class EnvironmentActorController(EnvironmentController):
                     posList = [other.bodyPos for other in self.predList["actor"]]
                     distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
                     smallest = min(distList)
-                    if smallest > 3:
+                    if smallest > 2.5:
                         actor.immCheck = True
                     else:
                         actor.timeBorn = self.currTime
