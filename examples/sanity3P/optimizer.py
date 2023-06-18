@@ -119,7 +119,7 @@ class EnvironmentActorController(EnvironmentController):
             # write multiple rows
             #writer.writerows(data)
 
-        headerDeath = ['id', 'simTime','predprey', 'lifespan','caughtBy']
+        headerDeath = ['id', 'simTime','predprey', 'lifespan','RanW','caughtBy','byRanW']
 
         with open('deathBorn.csv', 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
@@ -222,7 +222,7 @@ class EnvironmentActorController(EnvironmentController):
                     posList = [other.bodyPos for other in self.predList["actor"]]
                     distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
                     smallest = min(distList)
-                    if smallest > 2.5:
+                    if smallest > 4:
                         actor.immCheck = True
                     else:
                         actor.timeBorn = self.currTime
@@ -260,7 +260,7 @@ class EnvironmentActorController(EnvironmentController):
     def switchBrain(self,id):
         #print("change")
         actor = self.actor_controllerList[id]
-        self.deathBornCSV(id,actor.preyPred,actor.timeBorn,actor.closestID)
+        self.deathBornCSV(id,actor.preyPred,actor.timeBorn,actor.lastKiller)
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
             #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
@@ -366,6 +366,15 @@ class EnvironmentActorController(EnvironmentController):
         caught = None
         pyL = self.preyList
 
+        for prey in self.preyList["actor"]:
+            preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
+            posList = [other.bodyPos for other in preyList]
+            distList = [self.actorDist(prey.bodyPos,pos) for pos in posList]
+
+            if len(distList) > 0:
+                prey.smallAllyD = min(distList)
+                prey.smallAllyID =(preyList[distList.index(prey.smallAllyD)]).id
+
         pdIndexes = [i for i in range(len(self.predList["actor"]))]
         #l_shuffled = random.sample(self.predList["actor"], len(self.predList["actor"]))
         l_shuffled = random.sample(pdIndexes, len(pdIndexes))
@@ -376,6 +385,19 @@ class EnvironmentActorController(EnvironmentController):
         for predIND in l_shuffled:
             pred = self.predList["actor"].iloc[predIND]
             caught = None
+
+            predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 10 ]
+            posList = [other.bodyPos for other in predList]
+            distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
+            
+
+            if len(distList) > 0:
+                pred.smallAllyD = min(distList)
+                pred.smallAllyID =(predList[distList.index(pred.smallAllyD)]).id
+                #print(pred.id)
+                #print(pred.smallAllyID)
+                #dude
+
             if len(self.preyList.index) < 7:
                 break
 
@@ -422,10 +444,11 @@ class EnvironmentActorController(EnvironmentController):
                 #print(self.actor_controllerList[caught].gridID)
                 #print(pred.gridID)
                 (self.actor_controllerList[caught]).lastPredWeights = pred.weights
-                self.switchBrain(caught)
+                
                 #Hopefully this fixes it
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
                 self.actor_controllerList[caught].lastKiller = pred.id
+                self.switchBrain(caught)
                 
                 
                 
@@ -439,23 +462,16 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.predList["timeBorn"])
 
             #minTime = min(self.predList["lifeTime"])
-            #predID = self.predList["lifeTime"].idxmin()
-            #makes it so that the most furthest away pred is dying out of hope
-            smallDistG = 10
-            for predIND in l_shuffled:
-                pred = self.predList["actor"].iloc[predIND]
-                predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 10 ]
-                posList = [other.bodyPos for other in predList]
-                distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
+            if np.random.uniform(0.0,1.0) < 0.5:
+                predID = self.predList["lifeTime"].idxmin()
+            else:
+                smallDistG = 10
+                for predIND in l_shuffled:
+                    pred = self.predList["actor"].iloc[predIND]    
 
-                if len(distList) > 0:
-                    smallDist = min(distList)
-                else:
-                    smallDist = 0
-
-                if smallDist <= smallDistG:
-                    smallDistG = smallDist
-                    predID = pred.id
+                    if pred.smallAllyD <= smallDistG:
+                        smallDistG = pred.smallAllyD
+                        predID = pred.smallAllyID
             #print(self.predList["lifeTime"])
             #print(predID)
             #print(self.predList.index)
@@ -498,6 +514,9 @@ class EnvironmentActorController(EnvironmentController):
                 continue
 
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
+            if closestActor.preyPred == actor.preyPred:
+                dudue
+
             actor.closestID = closestActor.id
             actor.smallDist = smallest
             #A prey that got close, but not caught is a good prey
@@ -557,9 +576,22 @@ class EnvironmentActorController(EnvironmentController):
 
             dumbo = 0
 
+
+            ## Get Ally Angle
+            closestAlly = self.actor_controllerList[actor.smallAllyID]
+            closestVector =  np.array(closestAlly.bodyPos[:2]) - np.array(actor.bodyPos[:2])
+            standardAngle = self.angleBetween(closestVector,[-1.0,-0.0])
+            angleAlly = (self.goodAngle(actor.bodyA,standardAngle)) / math.pi
+
             #You might be wondering why exactly are there 3 inputs, despite the methodology only saying 2
             #Due to some numpy array problems I can't seem to fix, ive added in a dummy variable always set to 0
             #So in the end it doesn't do anything, i.e., its still technically 2 inputs
+            #print(actor.id)
+            #print(actor.smallAllyID)
+            #print(angleNorm)
+            #print(angleAlly)
+            
+            #actor.makeCognitiveOutput(angleNorm,angleAlly,inDist,LR)
             actor.makeCognitiveOutput(angleNorm,inDist,LR)
             #actor.tarA = angle
             
@@ -691,11 +723,13 @@ class EnvironmentActorController(EnvironmentController):
 
     def deathBornCSV(self,id,preyPred,timeBorn,caughtBy):
         with open('deathBorn.csv', 'a', encoding='UTF8', newline='') as f:
+            myActor = self.actor_controllerList[id]
+            myBy = self.actor_controllerList[caughtBy]
             writer = csv.writer(f)
             lifespan = self.currTime - timeBorn
             simTimeNow = self.currTime - self.simStartTime
             # write multiple rows
-            writer.writerow([id,simTimeNow,preyPred,lifespan,caughtBy])
+            writer.writerow([id,simTimeNow,preyPred,lifespan,myActor.hasRanW,caughtBy,myBy.hasRanW])
 
 
 
@@ -972,7 +1006,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
             actor, controller = develop(genotype).make_actor_and_controller()
             #Number of actors found here
             #controllerList = [controller for i in range(4)]
-            numberAGENTS = 40
+            numberAGENTS = 30
             controllerList = []
             for i in range(numberAGENTS):
                 actor, controller = develop(genotype).make_actor_and_controller()

@@ -70,7 +70,7 @@ class CpgActorController(ActorController):
         self.timeBorn = datetime.now().timestamp()
         self.lastTime = self.timeBorn
         self.tag = 1
-        self.lastKiller = None
+        self.lastKiller = 1
         self.lastPredWeights = None
 
         self.closestID = 0
@@ -82,6 +82,8 @@ class CpgActorController(ActorController):
         self.closestPrey = None
         self.closestPreyW = None
         self.smallDist = 0
+        self.smallAllyD = 10
+        self.smallAllyID = 1
 
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):
@@ -174,7 +176,8 @@ class CpgActorController(ActorController):
         temp = input.copy()
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
-            temp = np.dot(temp, weight)+(bias)
+            temp = np.dot(temp, weight) 
+            #+(bias)
             #print("f")
             #print(temp)
             #temp = self.np_elu(temp)
@@ -184,9 +187,9 @@ class CpgActorController(ActorController):
             #print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,inDist,dumbo):
+    def makeCognitiveOutput(self,ang,angAlly,LR):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,inDist,dumbo]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,angAlly,LR]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
@@ -208,7 +211,8 @@ class CpgActorController(ActorController):
         else:
             tagRaw = -1
         #self.tag = output[1]
-        self.tag = tagRaw
+        if np.random.uniform(0.0,1.0) < 0.1:
+            self.tag = tagRaw
         #print(f"this is tag %s " % self.tag)
         self.momentum = 100
 
