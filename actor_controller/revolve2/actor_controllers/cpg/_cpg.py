@@ -81,6 +81,7 @@ class CpgActorController(ActorController):
         self.hasRanW = True
         self.closestPrey = None
         self.closestPreyW = None
+        self.smallDist = 0
 
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):

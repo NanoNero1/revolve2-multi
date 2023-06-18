@@ -222,7 +222,7 @@ class EnvironmentActorController(EnvironmentController):
                     posList = [other.bodyPos for other in self.predList["actor"]]
                     distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
                     smallest = min(distList)
-                    if smallest > 2:
+                    if smallest > 3:
                         actor.immCheck = True
                     else:
                         actor.timeBorn = self.currTime
@@ -438,8 +438,24 @@ class EnvironmentActorController(EnvironmentController):
         if len(self.predList) > 7 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
-            minTime = min(self.predList["lifeTime"])
-            predID = self.predList["lifeTime"].idxmin()
+            #minTime = min(self.predList["lifeTime"])
+            #predID = self.predList["lifeTime"].idxmin()
+            #makes it so that the most furthest away pred is dying out of hope
+            smallDistG = 10
+            for predIND in l_shuffled:
+                pred = self.predList["actor"].iloc[predIND]
+                predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 10 ]
+                posList = [other.bodyPos for other in predList]
+                distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
+
+                if len(distList) > 0:
+                    smallDist = min(distList)
+                else:
+                    smallDist = 0
+
+                if smallDist <= smallDistG:
+                    smallDistG = smallDist
+                    predID = pred.id
             #print(self.predList["lifeTime"])
             #print(predID)
             #print(self.predList.index)
@@ -483,6 +499,7 @@ class EnvironmentActorController(EnvironmentController):
 
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
             actor.closestID = closestActor.id
+            actor.smallDist = smallest
             #A prey that got close, but not caught is a good prey
             #if closestActor.preyPred == 'prey':
             #    actor.lastSeenPrey = closestActor.weights
@@ -512,6 +529,9 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 LR = -1
             
+            if actor.preyPred == "prey":
+                angle = self.modusAng(angle+math.pi)
+
             angleNorm = angle / math.pi
             #print(actor.bodyA)
             #print(standardAngle)
@@ -536,6 +556,7 @@ class EnvironmentActorController(EnvironmentController):
                 inDist = 1
 
             dumbo = 0
+
             #You might be wondering why exactly are there 3 inputs, despite the methodology only saying 2
             #Due to some numpy array problems I can't seem to fix, ive added in a dummy variable always set to 0
             #So in the end it doesn't do anything, i.e., its still technically 2 inputs
