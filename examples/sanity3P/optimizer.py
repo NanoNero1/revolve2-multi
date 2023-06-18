@@ -101,7 +101,7 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck"]
+        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck","RanW"]
         data = [
             ['Albania', 28748, 'AL', 'ALB',1],
             ['Algeria', 2381741, 'DZ', 'DZA',1],
@@ -119,7 +119,7 @@ class EnvironmentActorController(EnvironmentController):
             # write multiple rows
             #writer.writerows(data)
 
-        headerDeath = ['id', 'simTime','predprey', 'lifespan']
+        headerDeath = ['id', 'simTime','predprey', 'lifespan','caughtBy']
 
         with open('deathBorn.csv', 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
@@ -142,7 +142,8 @@ class EnvironmentActorController(EnvironmentController):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
         #jeez = np.array(weights,dtype=object)
-        return np.array([ weights, biases])
+        #return np.array([ weights, biases])
+        return list([ weights, biases])
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
@@ -172,7 +173,8 @@ class EnvironmentActorController(EnvironmentController):
 
             crossWeights.append(np.concatenate((parent1W[0][ind][:cutIndex],parent2W[0][ind][cutIndex:]))    )
             crossBiases.append(np.concatenate((parent1W[1][ind][:cutIndex],parent2W[1][ind][cutIndex:])))
-        return np.array([ crossWeights, crossBiases])
+        #return np.array([ crossWeights, crossBiases])
+        return list([ crossWeights, crossBiases])
 
     ###
     #Control Section: This is the place where the cake is put together
@@ -258,7 +260,7 @@ class EnvironmentActorController(EnvironmentController):
     def switchBrain(self,id):
         #print("change")
         actor = self.actor_controllerList[id]
-        self.deathBornCSV(id,actor.preyPred,actor.timeBorn)
+        self.deathBornCSV(id,actor.preyPred,actor.timeBorn,actor.closestID)
         if actor.preyPred == "prey":
             #actor = self.actor_controllerList[self.preyList[id]]
             #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
@@ -282,19 +284,22 @@ class EnvironmentActorController(EnvironmentController):
             #actor = self.actor_controllerList[self.predList[id]]
             #secondBest = self.new_denseWeights(self.configuration)
             #preyList = self.preyList["actor"]
-            preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
-            posList = [other.bodyPos for other in preyList]
-            distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
-            smallest = min(distList)
+            ##preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
+            ##posList = [other.bodyPos for other in preyList]
+            ##distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
+            ##smallest = min(distList)
             #closestPrey = self.actor_controllerList[(preyList.iloc[distList.index(smallest)]).id]
-            closestPrey = preyList[distList.index(smallest)]
+            ##closestPrey = preyList[distList.index(smallest)]
             #secondBest = closestPrey.weights
-            genoID = list(random.choices(self.preyList.index, k=1, weights=(self.currTime - self.preyList['timeBorn']) ) )[0]
-            secondBest = (self.actor_controllerList[genoID]).weights
+            ##genoID = list(random.choices(self.preyList.index, k=1, weights=(self.currTime - self.preyList['timeBorn']) ) )[0]
+            ##secondBest = (self.actor_controllerList[genoID]).weights
 
             actor.preyPred = "prey"
-            bestGeno = self.bestGenotype("prey")
-
+            #bestGeno = self.bestGenotype("prey")
+            if actor.closestPreyW != None:
+                bestGeno = actor.closestPreyW
+            else:
+                bestGeno = self.new_denseWeights(self.configuration)
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "prey"
             
@@ -310,7 +315,8 @@ class EnvironmentActorController(EnvironmentController):
         #print('dd')
         #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
-        if reproChance < 0.2:
+        if reproChance < 0.2 and False:
+
             #Randomize Crossover Order to make sure not smae weights in every place
             if np.random.uniform(0.0,1.0) < 0.5:
                 crossedOver = self.myCrossover(bestGeno,secondBest)
@@ -319,10 +325,13 @@ class EnvironmentActorController(EnvironmentController):
             #print("ddd")
             #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
-        elif reproChance < 0.8:
+            actor.hasRanW = False
+        elif reproChance < 0.7:
             actor.weights = self.mutateWeights(bestGeno,self.configuration)
+            actor.hasRanW = False
         else:
             actor.weights = self.new_denseWeights(self.configuration)
+            actor.hasRanW = True
         #print("dddd")
         #print(actor.weights)
         #if joe == 0:
@@ -367,7 +376,7 @@ class EnvironmentActorController(EnvironmentController):
         for predIND in l_shuffled:
             pred = self.predList["actor"].iloc[predIND]
             caught = None
-            if len(self.preyList.index) < 11:
+            if len(self.preyList.index) < 7:
                 break
 
             #Separate theseeeee
@@ -395,6 +404,8 @@ class EnvironmentActorController(EnvironmentController):
 
             #caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
+                pred.closestPrey = None
+                pred.closestPreyW = None
                 #print(caught)
                 #If a prey got close, but caught, it is a bad prey
                 #if caught == pred.lastSeenPrey:
@@ -424,7 +435,7 @@ class EnvironmentActorController(EnvironmentController):
                 lol = 0
 
         #Handles Death of Predator
-        if len(self.predList) > 10 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
+        if len(self.predList) > 7 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
             #print(self.predList["timeBorn"])
 
             minTime = min(self.predList["lifeTime"])
@@ -515,6 +526,12 @@ class EnvironmentActorController(EnvironmentController):
 
             if smallest < 5:
                 inDist = smallest / 5
+
+                if actor.preyPred == "pred":
+                    if actor.closestPrey != closestActor.id:
+                        actor.closestPrey = closestActor.id
+                        actor.closestPreyW = closestActor.weights
+
             else:
                 inDist = 1
 
@@ -648,16 +665,16 @@ class EnvironmentActorController(EnvironmentController):
             simTime = self.currTime - self.simStartTime
             # write multiple rows
             for actor in self.actor_controllerList:
-                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck] 
+                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck,actor.hasRanW] 
                 writer.writerow(newDataLine)
 
-    def deathBornCSV(self,id,preyPred,timeBorn):
+    def deathBornCSV(self,id,preyPred,timeBorn,caughtBy):
         with open('deathBorn.csv', 'a', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
             lifespan = self.currTime - timeBorn
             simTimeNow = self.currTime - self.simStartTime
             # write multiple rows
-            writer.writerow([id,simTimeNow,preyPred,lifespan])
+            writer.writerow([id,simTimeNow,preyPred,lifespan,caughtBy])
 
 
 

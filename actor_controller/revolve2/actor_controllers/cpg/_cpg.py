@@ -78,6 +78,10 @@ class CpgActorController(ActorController):
         self.lastSeenPrey = None
         self.lifeTime = datetime.now().timestamp()
 
+        self.hasRanW = True
+        self.closestPrey = None
+        self.closestPreyW = None
+
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):
         self.id = id
@@ -116,7 +120,7 @@ class CpgActorController(ActorController):
 
 
             #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
-            self.lastTime = self.currTime;
+            self.lastTime = self.currTime
 
 
 
