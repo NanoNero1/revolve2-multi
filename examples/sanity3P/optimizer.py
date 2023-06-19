@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,2]
+        self.configuration = [2,2,2]
 
         self.preyImm = 10
 

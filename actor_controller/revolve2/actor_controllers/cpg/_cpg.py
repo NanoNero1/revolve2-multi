@@ -174,10 +174,10 @@ class CpgActorController(ActorController):
     #Calculates the NN ouput manually with numpy
     def model_pred(self,input, weights):
         temp = input.copy()
-        print("sp")
-        print(self.id)
-        print(weights)
-        print(temp)
+        #print("sp")
+        #print(self.id)
+        #print(weights)
+        #print(temp)
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
             temp = np.dot(temp, weight) 
@@ -189,7 +189,7 @@ class CpgActorController(ActorController):
             temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
             #print("c")
             #print(temp)
-        print(temp)
+        #print(temp)
         return temp
     
     def makeCognitiveOutput(self,ang,inDist):
@@ -225,7 +225,7 @@ class CpgActorController(ActorController):
         #print(f"this is tag %s " % self.tag)
         self.momentum = 100
 
-        print(self.tarA)
+        #print(self.tarA)
 
     #My orientation equation gives angles outside of the boundaries (-pi,pi) this fixes it
     def modusAng(self,ang):
