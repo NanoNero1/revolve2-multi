@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,2,2]
+        self.configuration = [2,2]
 
         self.preyImm = 10
 
@@ -222,7 +222,7 @@ class EnvironmentActorController(EnvironmentController):
                     posList = [other.bodyPos for other in self.predList["actor"]]
                     distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
                     smallest = min(distList)
-                    if smallest > 4:
+                    if smallest > 5:
                         actor.immCheck = True
                     else:
                         actor.timeBorn = self.currTime
@@ -398,8 +398,24 @@ class EnvironmentActorController(EnvironmentController):
                 #print(pred.smallAllyID)
                 #dude
 
+            #anti-stalling technique
             if len(self.preyList.index) < 7:
                 break
+
+            #if  len(self.predList.index) < 7:
+            #    #posList = [other.bodyPos for other in predList]
+            #    dWalls = 0
+            #    for i,posit in enumerate(posList):
+            #       myWalls = max(abs(posit[0]),abs(posit[1]))
+            #        if myWalls > dWalls:
+            #            dWalls = myWalls
+            #            toKill = predList[i].id
+            #    self.switchBrain([i.id for i in self.preyList["actor"]])
+            #    self.switchBrain(toKill)
+            #
+            #    
+            #    break
+                
 
             #Separate theseeeee
             #caughtList = pyL[(pyL["gridID"] == pred.gridID) & (pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - 20)]
@@ -486,13 +502,13 @@ class EnvironmentActorController(EnvironmentController):
         
         #A Random Prey May Die
         #if Flen(self.preyList) > 7 and (self.currTime - self.preylifeSpan() > self.preyDeathTime):
-        if False:
+        if len(self.predList) <= 7:
             #minTime = min(self.preyList["lifeTime"])
             
             #preyID = self.preyList["lifeTime"].idxmin() 
             preyID = random.choice(self.preyList.index)
             self.switchBrain(preyID)
-            self.preyDeathTime = (datetime.now().timestamp())
+            #self.preyDeathTime = (datetime.now().timestamp())
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
@@ -543,13 +559,15 @@ class EnvironmentActorController(EnvironmentController):
             #angle = angle / math.pi
             #smallest = np.clip(smallest,-5,5) / 5
             angleMag = abs(angle) / math.pi
-            if angle > 0:
-                LR = 1
-            else:
-                LR = -1
+            
             
             if actor.preyPred == "prey":
                 angle = self.modusAng(angle+math.pi)
+
+            if angle > 0:
+                LeftR = 1
+            else:
+                LeftR = -1
 
             angleNorm = angle / math.pi
             #print(actor.bodyA)
@@ -563,16 +581,11 @@ class EnvironmentActorController(EnvironmentController):
             isItPrey = 1 if closestActor.preyPred == "prey" else -1
             #print(isItPrey)
 
-            if smallest < 5:
-                inDist = smallest / 5
-
-                if actor.preyPred == "pred":
-                    if actor.closestPrey != closestActor.id:
-                        actor.closestPrey = closestActor.id
-                        actor.closestPreyW = closestActor.weights
-
-            else:
-                inDist = 1
+            inDist = np.clip(smallest / 20,0.0,1.0)
+            if actor.preyPred == "pred":
+                if actor.closestPrey != closestActor.id:
+                    actor.closestPrey = closestActor.id
+                    actor.closestPreyW = closestActor.weights
 
             dumbo = 0
 
@@ -590,9 +603,8 @@ class EnvironmentActorController(EnvironmentController):
             #print(actor.smallAllyID)
             #print(angleNorm)
             #print(angleAlly)
-            
             #actor.makeCognitiveOutput(angleNorm,angleAlly,inDist,LR)
-            actor.makeCognitiveOutput(angleNorm,inDist,LR)
+            actor.makeCognitiveOutput(LeftR,inDist)
             #actor.tarA = angle
             
             #actor.tarA = angle if isItPrey == 1 else self.modusAng(angle - math.pi)

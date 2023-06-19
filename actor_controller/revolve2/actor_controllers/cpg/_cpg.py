@@ -174,6 +174,10 @@ class CpgActorController(ActorController):
     #Calculates the NN ouput manually with numpy
     def model_pred(self,input, weights):
         temp = input.copy()
+        print("sp")
+        print(self.id)
+        print(weights)
+        print(temp)
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
             temp = np.dot(temp, weight) 
@@ -185,11 +189,12 @@ class CpgActorController(ActorController):
             temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
             #print("c")
             #print(temp)
+        print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,angAlly,LR):
+    def makeCognitiveOutput(self,ang,inDist):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,angAlly,LR]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,inDist]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
@@ -204,17 +209,23 @@ class CpgActorController(ActorController):
         #self.tarA = sigged*LR
 
         ###this helps remove the crazier movements
-        self.tarA = np.clip(sigged,a_min=(self.tarA - 0.03),a_max=(self.tarA + 0.03))
+        if sigged >= 0:
+            self.tarA = 0.7
+        else:
+            self.tarA = -0.7
+        #self.tarA = np.clip(sigged,a_min=(self.tarA - 0.03),a_max=(self.tarA + 0.03))
         tagRaw = np.clip(output[1],a_min=-1,a_max=1)
         if tagRaw > 0:
             tagRaw = 1
         else:
             tagRaw = -1
         #self.tag = output[1]
-        if np.random.uniform(0.0,1.0) < 0.1:
+        if np.random.uniform(0.0,1.0) < 0.1 and False:
             self.tag = tagRaw
         #print(f"this is tag %s " % self.tag)
         self.momentum = 100
+
+        print(self.tarA)
 
     #My orientation equation gives angles outside of the boundaries (-pi,pi) this fixes it
     def modusAng(self,ang):
