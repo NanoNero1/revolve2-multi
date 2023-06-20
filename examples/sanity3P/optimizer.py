@@ -101,7 +101,7 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
-        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck","RanW"]
+        header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck","RanW",'closestAlly']
         data = [
             ['Albania', 28748, 'AL', 'ALB',1],
             ['Algeria', 2381741, 'DZ', 'DZA',1],
@@ -147,7 +147,7 @@ class EnvironmentActorController(EnvironmentController):
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
-    def mutateWeights(self,weights,config,alpha=0.1):
+    def mutateWeights(self,weights,config,alpha=0.05):
         #Technically you could find the matrix size implicitly (and would be better design)
         mutWeights = weights.copy()
         for ind in range(len(config)-1):
@@ -326,7 +326,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(crossedOver)
             actor.weights = self.mutateWeights(crossedOver,self.configuration)
             actor.hasRanW = False
-        elif reproChance < 0.7:
+        elif reproChance < 0.66:
             actor.weights = self.mutateWeights(bestGeno,self.configuration)
             actor.hasRanW = False
         else:
@@ -345,6 +345,7 @@ class EnvironmentActorController(EnvironmentController):
         itsNow = datetime.now().timestamp()
         actor.timeBorn = itsNow
         actor.lifeTime = itsNow
+        actor.lastTag = itsNow
 
         #Update the actor dataframe's time
         self.actFrame.loc[id,"timeBorn"] = itsNow
@@ -386,7 +387,7 @@ class EnvironmentActorController(EnvironmentController):
             pred = self.predList["actor"].iloc[predIND]
             caught = None
 
-            predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 10 ]
+            predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 30 ]
             posList = [other.bodyPos for other in predList]
             distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
             
@@ -432,7 +433,7 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 smallest = 1000
 
-            if smallest < 1.5:
+            if smallest < 1:
                 #print(smallest)
                 #print(pred.id)
                 #caught = (preyList.iloc[distList.index(smallest)]).id
@@ -478,7 +479,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(self.predList["timeBorn"])
 
             #minTime = min(self.predList["lifeTime"])
-            if np.random.uniform(0.0,1.0) < 0.5:
+            if np.random.uniform(0.0,1.0) < 1.0:
                 predID = self.predList["lifeTime"].idxmin()
             else:
                 smallDistG = 10
@@ -581,7 +582,10 @@ class EnvironmentActorController(EnvironmentController):
             isItPrey = 1 if closestActor.preyPred == "prey" else -1
             #print(isItPrey)
 
-            inDist = np.clip(smallest / 20,0.0,1.0)
+            #closer it gets, the more active it becomes
+            inDist = np.clip(smallest/20,0.0,1.0)
+            #inDist = (1/(1 + np.exp(-1*(0.5*smallest - 4))))
+
             if actor.preyPred == "pred":
                 if actor.closestPrey != closestActor.id:
                     actor.closestPrey = closestActor.id
@@ -603,6 +607,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(actor.smallAllyID)
             #print(angleNorm)
             #print(angleAlly)
+            actor.currTime = self.currTime
             #actor.makeCognitiveOutput(angleNorm,angleAlly,inDist,LR)
             actor.makeCognitiveOutput(LeftR,inDist)
             #actor.tarA = angle
@@ -730,7 +735,7 @@ class EnvironmentActorController(EnvironmentController):
             simTime = self.currTime - self.simStartTime
             # write multiple rows
             for actor in self.actor_controllerList:
-                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck,actor.hasRanW] 
+                newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck,actor.hasRanW,actor.smallAllyID] 
                 writer.writerow(newDataLine)
 
     def deathBornCSV(self,id,preyPred,timeBorn,caughtBy):

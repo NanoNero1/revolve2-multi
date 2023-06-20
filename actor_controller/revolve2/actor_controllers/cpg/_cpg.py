@@ -85,6 +85,9 @@ class CpgActorController(ActorController):
         self.smallAllyD = 10
         self.smallAllyID = 1
 
+        self.currTime = datetime.now().timestamp()
+        self.lastTag = datetime.now().timestamp()
+
     #Initial instructions from the environment controller
     def controllerInit(self,id,weight_mat,preyPred):
         self.id = id
@@ -222,7 +225,13 @@ class CpgActorController(ActorController):
         #self.tag = output[1]
         if np.random.uniform(0.0,1.0) < 0.1 and False:
             self.tag = tagRaw
+
+        if self.currTime - self.lastTag > 100:
+            self.tag = tagRaw
+            self.lastTag = datetime.now().timestamp()
+            
         #print(f"this is tag %s " % self.tag)
+
         self.momentum = 100
 
         #print(self.tarA)
