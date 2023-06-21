@@ -181,7 +181,7 @@ class CpgActorController(ActorController):
         #print(self.id)
         #print(weights)
         #print(self.smallDist)
-        print(temp)
+        #print(temp)
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
             temp = np.dot(temp, weight) 
@@ -193,7 +193,7 @@ class CpgActorController(ActorController):
             temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
             #print("c")
             #print(temp)
-        print(temp)
+        #print(temp)
         return temp
     
     def makeCognitiveOutput(self,ang,inDist,tagRatio):
