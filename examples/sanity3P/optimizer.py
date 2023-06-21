@@ -70,7 +70,7 @@ class EnvironmentActorController(EnvironmentController):
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [2,2,2]
+        self.configuration = [3,2,2]
 
         self.preyImm = 10
 
@@ -385,6 +385,11 @@ class EnvironmentActorController(EnvironmentController):
         #print([i.id for i in self.preyList["actor"]])
         for predIND in l_shuffled:
             pred = self.predList["actor"].iloc[predIND]
+
+            if self.currTime - pred.timeBorn < 20:
+                continue
+
+
             caught = None
 
             predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 30 ]
@@ -480,7 +485,18 @@ class EnvironmentActorController(EnvironmentController):
 
             #minTime = min(self.predList["lifeTime"])
             if np.random.uniform(0.0,1.0) < 1.0:
-                predID = self.predList["lifeTime"].idxmin()
+                oldest = self.currTime
+                predID = None
+                for pred in self.predList["actor"]:
+                    #If someone is close to a prey, they feel hope
+                    if pred.smallDist < 5:
+                        continue
+                    if oldest > pred.lifeTime:
+                        oldest = pred.lifeTime
+                        predID = pred.id
+                if predID == None:
+                    predID = self.predList["lifeTime"].idxmin()
+
             else:
                 smallDistG = 10
                 for predIND in l_shuffled:
@@ -513,6 +529,8 @@ class EnvironmentActorController(EnvironmentController):
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
+        tagRatio = self.getTagRatio()
+
         for ind,actor in enumerate(self.actor_controllerList):
             #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
             
@@ -609,7 +627,7 @@ class EnvironmentActorController(EnvironmentController):
             #print(angleAlly)
             actor.currTime = self.currTime
             #actor.makeCognitiveOutput(angleNorm,angleAlly,inDist,LR)
-            actor.makeCognitiveOutput(LeftR,inDist)
+            actor.makeCognitiveOutput(LeftR,inDist,tagRatio)
             #actor.tarA = angle
             
             #actor.tarA = angle if isItPrey == 1 else self.modusAng(angle - math.pi)
@@ -679,6 +697,20 @@ class EnvironmentActorController(EnvironmentController):
     def updPreyPred(self):
         self.preyList = self.actFrame.query("preyPred=='prey'")
         self.predList = self.actFrame.query("preyPred=='pred'")
+
+    def getTagRatio(self):
+        count = 0
+        plusTag = 0
+        for actor in self.actor_controllerList:
+            if actor.immCheck == False:
+                continue
+            count += 1
+            if actor.tag == 1:
+                plusTag += 1
+
+        half = count / 2
+        return (plusTag - half) / count
+
 
     #Finds the distance between two actors, return a super large distance if same position
     #so that an actor "ignores" itself in terms of distance

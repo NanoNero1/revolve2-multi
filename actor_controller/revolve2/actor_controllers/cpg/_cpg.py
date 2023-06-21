@@ -180,7 +180,8 @@ class CpgActorController(ActorController):
         #print("sp")
         #print(self.id)
         #print(weights)
-        #print(temp)
+        #print(self.smallDist)
+        print(temp)
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
             temp = np.dot(temp, weight) 
@@ -192,12 +193,12 @@ class CpgActorController(ActorController):
             temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
             #print("c")
             #print(temp)
-        #print(temp)
+        print(temp)
         return temp
     
-    def makeCognitiveOutput(self,ang,inDist):
+    def makeCognitiveOutput(self,ang,inDist,tagRatio):
         #There might be some reference issue here, check me
-        output = list(self.model_pred(np.array([ang,inDist]),self.weights)).copy()
+        output = list(self.model_pred(np.array([ang,inDist,tagRatio]),self.weights)).copy()
         #self.tarA = output[0]*math.pi
         #print(output)
         #cut
