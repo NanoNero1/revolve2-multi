@@ -65,12 +65,14 @@ class EnvironmentActorController(EnvironmentController):
 
         :param actor_controller: The actor controller to use for multiple actors in the environment.
         """
+        #random.seed(5)
+        #np.random.seed(5)
         self.actor_controllerList = actor_controllerList
 
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
-        self.configuration = [3,2,2]
+        self.configuration = [3,3,2]
 
         self.preyImm = 10
 

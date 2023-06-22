@@ -184,7 +184,7 @@ class CpgActorController(ActorController):
         #print(temp)
         for weight, bias in zip(weights[0],weights[1]):
             #print("i")
-            temp = np.dot(temp, weight) 
+            temp = np.dot(temp, weight)
             #+(bias)
             #print("f")
             #print(temp)
