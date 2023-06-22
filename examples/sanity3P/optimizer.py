@@ -65,8 +65,8 @@ class EnvironmentActorController(EnvironmentController):
 
         :param actor_controller: The actor controller to use for multiple actors in the environment.
         """
-        #random.seed(5)
-        #np.random.seed(5)
+        random.seed(9)
+        np.random.seed(9)
         self.actor_controllerList = actor_controllerList
 
         self.actorCount = 0
