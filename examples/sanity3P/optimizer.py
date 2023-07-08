@@ -581,7 +581,7 @@ class EnvironmentActorController(EnvironmentController):
             #smallest = np.clip(smallest,-5,5) / 5
             angleMag = abs(angle) / math.pi
             
-            
+            #Input 1: Finds
             if actor.preyPred == "prey":
                 angle = self.modusAng(angle+math.pi)
 
@@ -590,57 +590,33 @@ class EnvironmentActorController(EnvironmentController):
             else:
                 LeftR = -1
 
+            #DEPRECATED: Normalizes the angle to fit in between -1 and 1
             angleNorm = angle / math.pi
-            #print(actor.bodyA)
-            #print(standardAngle)
-            #print(angle)
-            #print(angleMag)
-            #print(LR)
-            #print(actor.id)
-            #print(closestActor.id)
-            #dd
-            isItPrey = 1 if closestActor.preyPred == "prey" else -1
-            #print(isItPrey)
 
-            #closer it gets, the more active it becomes
+            #Input 2: Distance to the closest adversary
             inDist = np.clip(smallest/20,0.0,1.0)
-            #inDist = (1/(1 + np.exp(-1*(0.5*smallest - 4))))
 
+
+            #Updates which prey are closest at any time
             if actor.preyPred == "pred":
                 if actor.closestPrey != closestActor.id:
                     actor.closestPrey = closestActor.id
                     actor.closestPreyW = closestActor.weights
 
-            dumbo = 0
-
-
-            ## Get Ally Angle
+            #DEPRECATED: Finds the angle of the closest Ally
             closestAlly = self.actor_controllerList[actor.smallAllyID]
             closestVector =  np.array(closestAlly.bodyPos[:2]) - np.array(actor.bodyPos[:2])
             standardAngle = self.angleBetween(closestVector,[-1.0,-0.0])
             angleAlly = (self.goodAngle(actor.bodyA,standardAngle)) / math.pi
 
-            #You might be wondering why exactly are there 3 inputs, despite the methodology only saying 2
-            #Due to some numpy array problems I can't seem to fix, ive added in a dummy variable always set to 0
-            #So in the end it doesn't do anything, i.e., its still technically 2 inputs
-            #print(actor.id)
-            #print(actor.smallAllyID)
-            #print(angleNorm)
-            #print(angleAlly)
+            #Passing along time information that the actor cannot access itself
             actor.currTime = self.currTime
-            #actor.makeCognitiveOutput(angleNorm,angleAlly,inDist,LR)
+
+            #We here feed our inputs to the cognitive brain so it can make decisions on the angle and the tag it chooses
             actor.makeCognitiveOutput(LeftR,inDist,tagRatio)
-            #actor.tarA = angle
-            
-            #actor.tarA = angle if isItPrey == 1 else self.modusAng(angle - math.pi)
 
-            #actor.makeCognitiveOutput(angleNorm,closestActor.tag)
-            #actor.makeCognitiveOutput(0,0)
-            #(self.actorStates[0].position)[:2]
 
-    #def getChannelList(tag,)
-
-    #Get the LifeSpan of 
+    #The lifespan of predators gets shorter the more that there are of them
     def predatorlifeSpan(self):
         predsLeft = len(self.predList)
         
@@ -649,7 +625,8 @@ class EnvironmentActorController(EnvironmentController):
             return 50 - predsLeft*2
         else:
             return 1000000000
-        
+
+    #DEPRECATED    
     def preylifeSpan(self):
         preysLeft = len(self.preyList)
         
@@ -663,21 +640,20 @@ class EnvironmentActorController(EnvironmentController):
     #Informational Functions
     ###
 
-    #Returns a tuple for where the actor is on the grid
+    #Returns a tuple for where the actor is on the grid : DEPRECATED
     def get_grid_Tup(self, id):
         position = (self.actorStates[id].position)
-        #NEED FIX: I dont super understand why its messing up with values other than 10
         x = round(position[0] * 0.2)
         y = round(position[1] * 0.2)
         return (x, y)
     
     #Get the oldest genotypes
     def bestGenotype(self,preyPred):
-        #Update the predator and prey lists before checking, its probably uneccessary though
+        #Updates the predator and prey lists before checking, its probably uneccessary though
         self.updPreyPred()
         
+        #Depending on the species, the best genotype is the closest prey, or a random predator
         if preyPred == "prey":
-            #genoID = self.preyList['timeBorn'].idxmin()
             bestDist = 0
             for prey in self.preyList['actor']:
                 if prey.immCheck == False:
@@ -688,11 +664,7 @@ class EnvironmentActorController(EnvironmentController):
                     bestDist = closestDist
                     genoID = prey.closestID      
         else:
-            #genoID = self.predList['timeBorn'].idxmin()
-            #A random lucky predator gets selected to reproduce
-            #genoID = random.choice(self.predList.index) 
             genoID = list(random.choices(self.predList.index, k=1, weights=(self.currTime - self.predList['timeBorn']) ) )[0]
-
         return (self.actor_controllerList[genoID]).weights
 
     #Updates which are prey and which are predators
@@ -700,6 +672,7 @@ class EnvironmentActorController(EnvironmentController):
         self.preyList = self.actFrame.query("preyPred=='prey'")
         self.predList = self.actFrame.query("preyPred=='pred'")
 
+    #Will be passed as one of the NN inputs, the more positive the ratio, the more +1 tags there are
     def getTagRatio(self):
         count = 0
         plusTag = 0
@@ -732,17 +705,20 @@ class EnvironmentActorController(EnvironmentController):
         angle = math.atan2(det, dot)            # atan2(y, x) or atan2(sin, cos)
         return angle
 
+    #DEPRECATED
     def modusAngle(self,ang1,ang2):
         diff = (ang2+math.pi) - (ang1+math.pi)
         modused = (diff % (2*math.pi)) - math.pi
         return modused
     
+    #DEPRECATED
     def goodAngle(self,ang1,ang2):
         modus = ang2 - ang1
         if abs(modus) > math.pi:
             modus += -2*math.pi*np.sign(modus)
         return modus
 
+    #
     def modusAng(self,ang):
         phase = ang + math.pi
         modused = (phase % (2*math.pi)) - math.pi
@@ -753,6 +729,7 @@ class EnvironmentActorController(EnvironmentController):
     # Utility Functions
     ###
 
+    #DEPRECATED
     def writeMyCSV(self):
         with open('countries.csv', 'a', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
@@ -760,37 +737,35 @@ class EnvironmentActorController(EnvironmentController):
             # write multiple rows
             writer.writerows(self.pushCollectData)
 
-    #Here is all the output data needed for 
+    #Here is all the output data needed for positional data
     def positionMap(self):
-
         with open('countries.csv', 'a', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
-
             simTime = self.currTime - self.simStartTime
+
             # write multiple rows
             for actor in self.actor_controllerList:
                 newDataLine = [actor.id,simTime,actor.bodyPos,actor.bodyA,actor.preyPred,actor.tag,actor.closestID,actor.immCheck,actor.hasRanW,actor.smallAllyID] 
                 writer.writerow(newDataLine)
 
+    #Handles data regarding when and how predators/prey die
     def deathBornCSV(self,id,preyPred,timeBorn,caughtBy):
         with open('deathBorn.csv', 'a', encoding='UTF8', newline='') as f:
+            #Some variables are retrieved on the spot
             myActor = self.actor_controllerList[id]
             myBy = self.actor_controllerList[caughtBy]
             writer = csv.writer(f)
             lifespan = self.currTime - timeBorn
             simTimeNow = self.currTime - self.simStartTime
-            # write multiple rows
+
             writer.writerow([id,simTimeNow,preyPred,lifespan,myActor.hasRanW,caughtBy,myBy.hasRanW])
 
 
 
-    #Updates the actor dataframe
+    #The grid needs to be updated so that we know where all the robots are
     def updateActFrame(self):
-        #print([actor.bodyPos for actor in self.actor_controllerList])
-        #print([actor.bodyA for actor in self.actor_controllerList])
         self.actFrame['gridID'] = [actor.gridID for actor in self.actor_controllerList]
 
-    #def (self):
 
     
 
@@ -967,7 +942,7 @@ class Optimizer(EAOptimizer[Genotype, float]):
         return True
 
     def _init_runner(self) -> None:
-        self._runner = LocalRunner(headless=True)
+        self._runner = LocalRunner(headless=False)
 
     def _select_parents(
         self,
