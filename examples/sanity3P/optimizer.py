@@ -36,8 +36,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 
-#Dimitri Imports
-#from tensorflow import keras
+
 import numpy as np
 from datetime import datetime
 from scipy.stats import qmc
@@ -46,10 +45,13 @@ from revolve2.core.database import open_async_database_sqlite
 from revolve2.core.database.serializers import DbFloat
 from revolve2.core.optimization.ea.generic_ea import DbEAOptimizerIndividual
 import pandas as pd
+
+#Some warning show up repeatedly, this ensures we aren't spammed in the terminal
 import warnings
 with warnings.catch_warnings():
     warnings.warn("Let this be your last warning")
     warnings.simplefilter("ignore")
+
 import random
 
 
@@ -65,21 +67,27 @@ class EnvironmentActorController(EnvironmentController):
 
         :param actor_controller: The actor controller to use for multiple actors in the environment.
         """
+
+        #This is to make sure we have a different rng each time
+        #IMPORTANT: if you do repeat experiments, dont forget to change the seed
         random.seed(9)
         np.random.seed(9)
         self.actor_controllerList = actor_controllerList
 
+        #Global Level Variables
         self.actorCount = 0
         self.cognitiveList = {}
         self.modelList = []
         self.configuration = [3,3,2]
 
+        #DEPRECATED
         self.preyImm = 10
 
-        #This list is for accessing all the actors in a dataframe
+        #This list is for accessing all the actors in a dataframe format
         self.actFrame = pd.DataFrame(columns=['id', 'actor', 'preyPred','timeBorn','lifeTime','gridID','lastKiller'])
         self.actFrame.set_index('id')
 
+        #Initializing Time Variables
         self.lastTime = (datetime.now().timestamp())
         self.currTime = (datetime.now().timestamp())
         self.simStartTime = (datetime.now().timestamp())
@@ -87,15 +95,17 @@ class EnvironmentActorController(EnvironmentController):
         self.preyDeathTime = (datetime.now().timestamp())
         self.lastTagTime = (datetime.now().timestamp())
 
+        #We try to make roughly half of the robots prey and half predators
         cutIndex = math.ceil(len(self.actor_controllerList) / 2)
         
-        #Initialize each actor_controller with a NN:
+        #Initialize each actor_controller with a Neural Network (NN)
         for ind,actor in enumerate(self.actor_controllerList):
             actor.controllerInit(ind,
                                  self.new_denseWeights(self.configuration),
                                  ("prey" if ind <= cutIndex else "pred"),
                                  )
-            #gridID = self.get_grid_Tup(actor.id)
+            #actFrame is a controller database that stores all the important values that we want to compare
+            #between individuals
             list_row = [ind,actor,actor.preyPred,actor.timeBorn,actor.lifeTime,(0,0),actor.lastKiller]
             self.actFrame.loc[len(self.actFrame)] = list_row
 
@@ -103,26 +113,20 @@ class EnvironmentActorController(EnvironmentController):
 
         self.updPreyPred()
 
+        #Each string represents a column of the data we collect
         header = ['id', 'simTime', 'position','angle','predprey', 'tag',"otherID","immCheck","RanW",'closestAlly']
-        data = [
-            ['Albania', 28748, 'AL', 'ALB',1],
-            ['Algeria', 2381741, 'DZ', 'DZA',1],
-            ['American Samoa', 199, 'AS', 'ASM',1],
-            ['Andorra', 468, 'AD', 'AND',1],
-            ['Angola', 1246700, 'AO', 'AGO',1],
-                ]
 
+
+        #Writes the header for our positional data
         with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
 
             # write the header
             writer.writerow(header)
 
-            # write multiple rows
-            #writer.writerows(data)
 
+        #Makes the header for our death & birth data
         headerDeath = ['id', 'simTime','predprey', 'lifespan','RanW','caughtBy','byRanW']
-
         with open('deathBorn.csv', 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
 
@@ -135,35 +139,36 @@ class EnvironmentActorController(EnvironmentController):
     # Neural Network Functions
     ###
 
-    #Importing existing libraries was buggy, so I'm making my own neural net infrastructure
-    #TO-DO: make smart NN initalization choices
+    #Returns new random weights if given the configuration we want, i.e. subsequent layer sizes
     def new_denseWeights(self,config):
         weights = []
         biases = []
+        #All weights are chosen to be between -1 and 1
         for ind in range(len(config)-1):
             weights.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind],config[ind+1])) )
             biases.append( np.random.uniform(low=-1.0, high=1.0, size=(config[ind+1],)) )
-        #jeez = np.array(weights,dtype=object)
-        #return np.array([ weights, biases])
         return list([ weights, biases])
     
     #Allows us to make new mutated weight matrices from parents
     #alpha controls how harsh the mutations are
     def mutateWeights(self,weights,config,alpha=0.05):
-        #Technically you could find the matrix size implicitly (and would be better design)
+        #Technically you could find the matrix size implicitly (and would be better for general use), but this is easier for us
         mutWeights = weights.copy()
+
         for ind in range(len(config)-1):
+            # a represents the main weights
             a = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind],config[ind+1])) 
             mutWeights[0][ind] += a
             mutWeights[0][ind] = np.clip(mutWeights[0][ind],-1.0,1.0)
+            # b is for the bias weights
             b = np.random.uniform(low=-1.0*alpha, high=1.0*alpha, size=(config[ind+1],)) 
             mutWeights[1][ind] += b
             mutWeights[1][ind] = np.clip(mutWeights[1][ind],-1.0,1.0)
         return mutWeights
     
-    #Combines two parents' genotpye to make a child genotype
-    #STILL HAVE TO TEST!
+    #DEPRECATED: Combines two parents' genotpye to make a child genotype
     def myCrossover(self,parent1,parent2):
+        #To make sure we don't modify the original arrays, we use the copy() function
         parent1W = np.copy(parent1)
         parent2W = np.copy(parent2)
         crossWeights = []
@@ -173,9 +178,9 @@ class EnvironmentActorController(EnvironmentController):
             #Crossover Point at a random interval in the next layer
             cutIndex = randint(1,self.configuration[ind+1]-1) 
 
+            #Not every layer may have the same size of weight arrays
             crossWeights.append(np.concatenate((parent1W[0][ind][:cutIndex],parent2W[0][ind][cutIndex:]))    )
             crossBiases.append(np.concatenate((parent1W[1][ind][:cutIndex],parent2W[1][ind][cutIndex:])))
-        #return np.array([ crossWeights, crossBiases])
         return list([ crossWeights, crossBiases])
 
     ###
@@ -189,15 +194,11 @@ class EnvironmentActorController(EnvironmentController):
         :param actor_control: Object used to interface with the environment.
         """
 
+        #We collect data about the actors from the Mujoco environment
         self.actorStates = argList
-        #print("baba")
-        #print(len(argList))
 
-        #Passing info to the actor and asking it to control
-        #Only pass info that is needed on every tick
-        #print("lol")
-        #print([sta.position for sta in argList])
-        #print("lol2")
+        #We only pass info here that is needed on every tick, so not the inputs to the NN
+        #It needs to know its current angle, position, and the time step in order to move
         for ind, actor in enumerate(self.actor_controllerList):
 
             actor.passInfo(self.actorStates[ind],
@@ -208,17 +209,13 @@ class EnvironmentActorController(EnvironmentController):
 
         
 
-        ## 
-        
-
-        ## Time Based Section - doesnt update on every loop
-
-        
+        #Here we retrieve the current time, useful for comparison to past times
         self.currTime = (datetime.now().timestamp())
 
+        #The main loop for most of our mechanisms, updates every 2 seconds
         if float(self.currTime - self.lastTime) > 2:
             
-
+            #Checks if newborn prey are far away enough (5 units) to predators such that they can activate
             for actor in self.actor_controllerList:
                 if actor.immCheck == False and actor.preyPred == "prey":
                     posList = [other.bodyPos for other in self.predList["actor"]]
@@ -232,24 +229,14 @@ class EnvironmentActorController(EnvironmentController):
 
             self.updateGrid()
             
+            #Make all the actors decide their target angle and tag
             self.cognitiveActors(self.actorStates)
-            ##self.writeMyCSV()
-            #print(f"prey: %s" % self.preyList.index)
-            #print(f"pred: %s" % self.predList.index)
-            #print(self.actFrame.iloc[0])
+
+            #Mapping positional data is all done inside the dedicated function
             self.positionMap()
-            #print((self.actor_controllerList[0]).weights)
+
+            #Resets the time loop
             self.lastTime = (self.currTime)   
-
-        #Loop for data collection
-        #if float(self.currTime - self.lastTime) > 0.3:
-            #raAct = randint(0,0)
-            ##actor = self.actor_controllerList[raAct]
-
-            ##datas = [actor.id,actor.preyPred,actor.tag,actor.bodyPos]
-            #Normally, having a dynamically sized array especially with tons of data is a bad idea,
-            #Luckily it gets emptied out fairly regularly so the ammortization isnt super harmful
-            ##self.pushCollectData.append(datas)
             
 
 
@@ -258,19 +245,14 @@ class EnvironmentActorController(EnvironmentController):
     #experiment setup ideas
     ###
         
-    #Makes the brain switch from predator to prey and vice versa
+    #Makes the brain switch from predator to prey and vice versa, i.e. the death function
     def switchBrain(self,id):
-        #print("change")
         actor = self.actor_controllerList[id]
         self.deathBornCSV(id,actor.preyPred,actor.timeBorn,actor.lastKiller)
+
+        #Our selection process as a new predator says we should take the weight of whoever killed us
         if actor.preyPred == "prey":
-            #actor = self.actor_controllerList[self.preyList[id]]
-            #lastKiller = actor.lastKiller if actor.lastKiller != None else 1
-             
-
-
             if actor.lastPredWeights != None:
-                #secondBest = self.actor_controllerList[actor.lastKiller].weights
                 bestGeno = actor.lastPredWeights
             else:
                 bestGeno = self.new_denseWeights(self.configuration)
@@ -279,77 +261,42 @@ class EnvironmentActorController(EnvironmentController):
 
             #Update the actor dataframe
             self.actFrame.loc[id,"preyPred"] = "pred"
-            #print('joe')
-            #joe = 0
+            #Predators are not immune
             actor.immCheck = True
         else:
-            #actor = self.actor_controllerList[self.predList[id]]
-            #secondBest = self.new_denseWeights(self.configuration)
-            #preyList = self.preyList["actor"]
-            ##preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
-            ##posList = [other.bodyPos for other in preyList]
-            ##distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
-            ##smallest = min(distList)
-            #closestPrey = self.actor_controllerList[(preyList.iloc[distList.index(smallest)]).id]
-            ##closestPrey = preyList[distList.index(smallest)]
-            #secondBest = closestPrey.weights
-            ##genoID = list(random.choices(self.preyList.index, k=1, weights=(self.currTime - self.preyList['timeBorn']) ) )[0]
-            ##secondBest = (self.actor_controllerList[genoID]).weights
 
             actor.preyPred = "prey"
-            #bestGeno = self.bestGenotype("prey")
+
+            #Our selection process as a new prey states that we get the weights from the closest prey
             if actor.closestPreyW != None:
                 bestGeno = actor.closestPreyW
             else:
                 bestGeno = self.new_denseWeights(self.configuration)
-            #Update the actor dataframe
+
+
             self.actFrame.loc[id,"preyPred"] = "prey"
-            
+            #Prey are immune at birth
             actor.immCheck = False
-            #joe = 1
-            #print('joe2')
-            #print('doh')
 
-
-        #Generation of new weights
-        #actor.weights = self.mutateWeights(bestPred,self.configuration)
-        #print(bestPred)
-        #print('dd')
-        #print(secondBest)
         reproChance = np.random.uniform(0.0,1.0)
-        if reproChance < 0.2 and False:
 
-            #Randomize Crossover Order to make sure not smae weights in every place
-            if np.random.uniform(0.0,1.0) < 0.5:
-                crossedOver = self.myCrossover(bestGeno,secondBest)
-            else:
-                crossedOver = self.myCrossover(secondBest,bestGeno)
-            #print("ddd")
-            #print(crossedOver)
-            actor.weights = self.mutateWeights(crossedOver,self.configuration)
-            actor.hasRanW = False
-        elif reproChance < 0.66:
+        #With 66% chance, we follow our open-ended selection process
+        if reproChance < 0.66:
+            #We also mutate weights by adding a scaled down version to the existing weights
             actor.weights = self.mutateWeights(bestGeno,self.configuration)
             actor.hasRanW = False
+        #with 34% chance, we select new random weights
         else:
             actor.weights = self.new_denseWeights(self.configuration)
             actor.hasRanW = True
-        #print("dddd")
-        #print(actor.weights)
-        #if joe == 0:
-        #    lol = 0
-        #else:
-        #    diddit
-        #print("f")
-        #print(actor.lifeTime)
-        #print(actor.timeBorn)
 
+        #Time initializations
         itsNow = datetime.now().timestamp()
         actor.timeBorn = itsNow
         actor.lifeTime = itsNow
         actor.lastTag = itsNow
 
-        #Update the actor dataframe's time
+        #Update the actor's birth time
         self.actFrame.loc[id,"timeBorn"] = itsNow
         self.actFrame.loc[id,"lifeTime"] = itsNow
         self.updateActFrame()
@@ -360,137 +307,90 @@ class EnvironmentActorController(EnvironmentController):
         #All information retrieval needs to happen before changes are made
         self.updateActFrame()
         self.updPreyPred()
-
-        #THIS IS PROBABLY WHERE IT SLOWS DOWN
-        #Handles Death of Prey
-
-
         
         caught = None
         pyL = self.preyList
 
+        #DEPRECATED: finds the closest fellow prey for each prey
         for prey in self.preyList["actor"]:
             preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
             posList = [other.bodyPos for other in preyList]
             distList = [self.actorDist(prey.bodyPos,pos) for pos in posList]
-
             if len(distList) > 0:
                 prey.smallAllyD = min(distList)
                 prey.smallAllyID =(preyList[distList.index(prey.smallAllyD)]).id
 
+        #To avoid ordering bias in the predator IDs, we shuffle the list everytime
         pdIndexes = [i for i in range(len(self.predList["actor"]))]
-        #l_shuffled = random.sample(self.predList["actor"], len(self.predList["actor"]))
         l_shuffled = random.sample(pdIndexes, len(pdIndexes))
-        #print(l_shuffled)
-        #print('lol')
-        #print([i.id for i in self.predList["actor"]])
-        #print([i.id for i in self.preyList["actor"]])
+
         for predIND in l_shuffled:
             pred = self.predList["actor"].iloc[predIND]
 
+            #Young predators, i.e. less than 20 seconds old, cannot hunt just yet
             if self.currTime - pred.timeBorn < 20:
                 continue
 
-
+            #caught will capture the actor ID of a prey that got caught
             caught = None
 
+            #DEPRECATED: finds the closest fellow predator
             predList = [i for i in self.predList["actor"] if self.currTime - i.timeBorn > 30 ]
             posList = [other.bodyPos for other in predList]
             distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
-            
-
             if len(distList) > 0:
                 pred.smallAllyD = min(distList)
                 pred.smallAllyID =(predList[distList.index(pred.smallAllyD)]).id
-                #print(pred.id)
-                #print(pred.smallAllyID)
-                #dude
 
-            #anti-stalling technique
+            #In case there are not enough prey, we put a halt on hunting
             if len(self.preyList.index) < 7:
                 break
 
-            #if  len(self.predList.index) < 7:
-            #    #posList = [other.bodyPos for other in predList]
-            #    dWalls = 0
-            #    for i,posit in enumerate(posList):
-            #       myWalls = max(abs(posit[0]),abs(posit[1]))
-            #        if myWalls > dWalls:
-            #            dWalls = myWalls
-            #            toKill = predList[i].id
-            #    self.switchBrain([i.id for i in self.preyList["actor"]])
-            #    self.switchBrain(toKill)
-            #
-            #    
-            #    break
-                
-
-            #Separate theseeeee
-            #caughtList = pyL[(pyL["gridID"] == pred.gridID) & (pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - 20)]
-            #caughtList = pyL[(pred.id != pyL["lastKiller"]) & (pyL["timeBorn"] < self.currTime - self.preyImm)]
-            
-            #Distance based Implementation
-            #preyList = caughtList["actor"]
+            #Scans the list of prey for the closest one to the current actor
             preyList = [actor for actor in self.preyList["actor"] if actor.immCheck ]
             posList = [other.bodyPos for other in preyList]
             distList = [self.actorDist(pred.bodyPos,pos) for pos in posList]
             
+            #We find the distance of the closest prey
+            #Seting the smallest distance to 1000 ensures it is never used
             if len(distList) > 0:
                 smallest = min(distList)
             else:
                 smallest = 1000
 
             if smallest < 1:
-                #print(smallest)
-                #print(pred.id)
-                #caught = (preyList.iloc[distList.index(smallest)]).id
+                #If the prey is within 1 unit of distance to the predator, it may be caught
                 caught = (preyList[distList.index(smallest)]).id
-                #print(caught)
 
-
-            #caught = caughtList.index[0] if len(caughtList) > 0 else None
             if caught != None:
                 pred.closestPrey = None
                 pred.closestPreyW = None
-                #print(caught)
-                #If a prey got close, but caught, it is a bad prey
-                #if caught == pred.lastSeenPrey:
-                #    pred.lastSeenPrey = None
 
 
-                #A good predator can be born again
-                ##pred.timeBorn = (datetime.now().timestamp())
+                #Updates regarding the time value when the predator is born
                 itsNow = (datetime.now().timestamp())
                 pred.lifeTime = itsNow
                 self.actFrame.loc[pred.id,"lifeTime"] = itsNow
-
-                #print("ok")
-                #print(self.actor_controllerList[caught].gridID)
-                #print(pred.gridID)
                 (self.actor_controllerList[caught]).lastPredWeights = pred.weights
                 
-                #Hopefully this fixes it
+                #Updates the database and individual class object with what predator killed them
                 self.actFrame.loc[caught,"lastKiller"] = pred.id
                 self.actor_controllerList[caught].lastKiller = pred.id
+                
+                #Kills the Prey
                 self.switchBrain(caught)
                 
-                
-                
                 self.updPreyPred()
-                #
-            else:
-                lol = 0
 
-        #Handles Death of Predator
+        #Handles Death of Predator: those who don't see a prey within 5 units are eligible for death
+        #The one who has spent the most time since last catching a prey dies first
         if len(self.predList) > 7 and (self.currTime - self.predatorlifeSpan() > self.predDeathTime):
-            #print(self.predList["timeBorn"])
-
-            #minTime = min(self.predList["lifeTime"])
+            #This is always a true conditional
             if np.random.uniform(0.0,1.0) < 1.0:
                 oldest = self.currTime
                 predID = None
                 for pred in self.predList["actor"]:
-                    #If someone is close to a prey, they feel hope
+                    #If someone is close to a prey, they feel hope and dont die just yet
                     if pred.smallDist < 5:
                         continue
                     if oldest > pred.lifeTime:
@@ -498,7 +398,7 @@ class EnvironmentActorController(EnvironmentController):
                         predID = pred.id
                 if predID == None:
                     predID = self.predList["lifeTime"].idxmin()
-
+            #DEPRECATED
             else:
                 smallDistG = 10
                 for predIND in l_shuffled:
@@ -507,81 +407,50 @@ class EnvironmentActorController(EnvironmentController):
                     if pred.smallAllyD <= smallDistG:
                         smallDistG = pred.smallAllyD
                         predID = pred.smallAllyID
-            #print(self.predList["lifeTime"])
-            #print(predID)
-            #print(self.predList.index)
-            #print(predID)
-            #haha
             self.switchBrain(predID)
             self.predDeathTime = (datetime.now().timestamp())
-            #Main Conditional
-            #if float(self.lastTime - minTime) > self.predatorlifeSpan() and True:
-            #        #print(wenthere)
-            #        self.switchBrain(predID)
         
-        #A Random Prey May Die
-        #if Flen(self.preyList) > 7 and (self.currTime - self.preylifeSpan() > self.preyDeathTime):
+        #A Random Prey May Die if there are not enough predators
         if len(self.predList) <= 7:
-            #minTime = min(self.preyList["lifeTime"])
-            
-            #preyID = self.preyList["lifeTime"].idxmin() 
             preyID = random.choice(self.preyList.index)
+            #The switchBrain function is how the individual "dies"
             self.switchBrain(preyID)
-            #self.preyDeathTime = (datetime.now().timestamp())
     
     #Signals our robots to cognitively determine the next target angle
     def cognitiveActors(self,actorStates):
+        #Input 3: Tag ratio is the same for a all actors, so we calculate it once here
         tagRatio = self.getTagRatio()
 
         for ind,actor in enumerate(self.actor_controllerList):
-            #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) or (other.preyPred == 'pred'))), self.actor_controllerList))
             
+            #This block scans all the viable actors, gets their distance to our current subject, and find the 
+            #one with the minimal distance
             if actor.preyPred == "prey":
+                #Viable actors means that we need of the opposite species, same tag, not immune
                 viableOther = [pred for pred in self.predList["actor"] if (actor.tag == pred.tag) ]
             else:
-                #viableOther = list(filter(lambda other: ((actor.id != other.lastKiller) and ((other.timeBorn < self.currTime - self.preyImm) and (other.preyPred == 'prey'))), self.actor_controllerList))
                 viableOther = list(filter(lambda other: ((actor.tag == other.tag) and ((other.immCheck) and (other.preyPred == 'prey'))), self.actor_controllerList))
-
             posList = [other.bodyPos for other in viableOther]
             distList = [self.actorDist(actor.bodyPos,pos) for pos in posList]
-            # I NEED TO FIX THIS make smallest huuuuge
             if len(distList) > 0:
                 smallest = min(distList)
             else:
                 continue
 
             closestActor = self.actor_controllerList[(viableOther[distList.index(smallest)]).id]
-            if closestActor.preyPred == actor.preyPred:
-                dudue
-
             actor.closestID = closestActor.id
             actor.smallDist = smallest
-            #A prey that got close, but not caught is a good prey
-            #if closestActor.preyPred == 'prey':
-            #    actor.lastSeenPrey = closestActor.weights
 
+            #To find the vector to the closest adversary, we can simply take the difference in position
             closestVector =  np.array(closestActor.bodyPos[:2]) - np.array(actor.bodyPos[:2])
 
+            #Converting the vector into an angle (starting from  the negative x axis)
             standardAngle = self.angleBetween(closestVector,[-1.0,-0.0])
-            #print(actor.id)
-            #print(actor.bodyA)
-            #print(standardAngle)
-            #goodAngle is still broken
+        
+            #We need to find the difference angle between the rotation of the actor now, and its target
             angle = self.goodAngle(actor.bodyA,standardAngle)
-            #print(angle)
-            #print(smallest)
-            dumbo = 0
-            #This is where we can pass any cognitive information, 
-            # right now it is: 0-angle 1-distance, 2-tag, 3-dumbo (test variable)
-            #tag = randint(0,9)
-            #print(tag)
-
-            #Normalizing inputs
-            #angle = angle / math.pi
-            #smallest = np.clip(smallest,-5,5) / 5
-            angleMag = abs(angle) / math.pi
             
-            #Input 1: Finds
+            #Input 1: Finds wether the closest adversary is on the right or left of the current actor
             if actor.preyPred == "prey":
                 angle = self.modusAng(angle+math.pi)
 
@@ -711,14 +580,16 @@ class EnvironmentActorController(EnvironmentController):
         modused = (diff % (2*math.pi)) - math.pi
         return modused
     
-    #DEPRECATED
+    #We cant just subtract two angles to get a target angle, it causes some phase issues
+    #This function takes care of the phase such that we get the smallest representative angle
     def goodAngle(self,ang1,ang2):
         modus = ang2 - ang1
         if abs(modus) > math.pi:
             modus += -2*math.pi*np.sign(modus)
         return modus
 
-    #
+    #Sometimes angles exceed pi to the way we get our angles from the Quaternion
+    #This function translates such extreme angles to be absolutely less than pi
     def modusAng(self,ang):
         phase = ang + math.pi
         modused = (phase % (2*math.pi)) - math.pi
@@ -1030,8 +901,9 @@ class Optimizer(EAOptimizer[Genotype, float]):
                 )[0]
 
             actor, controller = develop(genotype).make_actor_and_controller()
-            #Number of actors found here
-            #controllerList = [controller for i in range(4)]
+            
+            #IMPORTANT: you can add or subtract the number of actors in the experiment by
+            #simply changing numberAgents
             numberAGENTS = 30
             controllerList = []
             for i in range(numberAGENTS):
@@ -1041,15 +913,14 @@ class Optimizer(EAOptimizer[Genotype, float]):
             env = Environment(EnvironmentActorController(controllerList))
             env.static_geometries.extend(self._TERRAIN.static_geometry)
 
-            #rng = np.random.default_rng()
+            #DEPRECATED: poisson positioning to make sure actors arent too close to each other
             radius = 0.05
             engine = qmc.PoissonDisk(d=2, radius=radius)
             sample = engine.random(numberAGENTS)
 
             
 
-            #print(sample)
-
+            #each actor is placed at a completely random position within the terrain
             for i in range(len(controllerList)):
                 env.actors.append(
                     PosedActor(
@@ -1066,7 +937,6 @@ class Optimizer(EAOptimizer[Genotype, float]):
                     )
                 )    
             batch.environments.append(env)
-        #batch_results = await self._runner.
         batch_results = await self._runner.run_batch(batch)
 
         return [

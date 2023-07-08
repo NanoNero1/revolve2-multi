@@ -28,7 +28,7 @@ def flat(size: Vector3 = Vector3([20.0, 20.0, 0.0])) -> Terrain:
         ]
     )
 
-#I wil write here a terrain that is like a bowl/prison/room
+#The 'jail' terrain is a flat plane with walls on all 4 sides
 def jail(size: Vector3 = Vector3([12.0, 12.0, 5.0])):
     #heightmap = np.zeros((10, 10))
     

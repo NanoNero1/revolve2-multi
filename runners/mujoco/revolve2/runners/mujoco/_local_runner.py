@@ -415,11 +415,7 @@ class LocalRunner(Runner):
             f"robot_{robot_index}/",  # the slash is added by dm_control. ugly but deal with it
         )
         assert bodyid >= 0
-
-        #qindex = model.body_jntadr[bodyid]
-        #print(f"bodyid %s" % bodyid)
         qindex = int((bodyid-1)/5*11)
-        #print(f"qindex %s" % qindex)
 
         # explicitly copy because the Vector3 and Quaternion classes don't copy the underlying structure
         position = Vector3([n for n in data.qpos[qindex : qindex + 3]])

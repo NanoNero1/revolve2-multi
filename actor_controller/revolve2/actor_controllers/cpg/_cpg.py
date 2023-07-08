@@ -54,11 +54,13 @@ class CpgActorController(ActorController):
         assert weight_matrix.shape[0] == weight_matrix.shape[1]
         assert state.shape[0] == weight_matrix.shape[0]
 
+        #Variables used for the CPG
         self._state = state
         self._num_output_neurons = num_output_neurons
         self._weight_matrix = weight_matrix
         self._dof_ranges = dof_ranges
 
+        #Variables use for Targeted Steering
         self._jointsLeft = jointsLeft
         self._jointsRight = jointsRight
         self.tarA = 0
@@ -67,12 +69,14 @@ class CpgActorController(ActorController):
         self.io = np.ndarray((2,), buffer=np.array([0.6,0.4]))
         self.getInfo = [0,0]
 
+        #Variables that are initialized on (re)birth
         self.timeBorn = datetime.now().timestamp()
         self.lastTime = self.timeBorn
         self.tag = 1
         self.lastKiller = 1
         self.lastPredWeights = None
 
+        #Variables that may change during the lifetime of the actor
         self.closestID = 0
         self.momentum = 0
         self.lastSeenPrey = None
@@ -88,7 +92,7 @@ class CpgActorController(ActorController):
         self.currTime = datetime.now().timestamp()
         self.lastTag = datetime.now().timestamp()
 
-    #Initial instructions from the environment controller
+    #Initial instructions from the environment controller, obly activated once
     def controllerInit(self,id,weight_mat,preyPred):
         self.id = id
         self.weights = weight_mat
@@ -104,28 +108,21 @@ class CpgActorController(ActorController):
 
         :param dt: The number of seconds to step forward.
         """
+
+        #Forward step for the CPGZ
         self._state = self._rk45(self._state, self._weight_matrix, dt)
 
-        #self.findTarAngle()
-        #Time Loop that helps for debugging prints
-        #         
+
+
         self.currTime = (datetime.now().timestamp())
+        #This block is useful for debugging, it allows you to see the angle/positon
+        #of the actor on a time loop
         if float(self.currTime - self.lastTime) > 0.5:
             if self.id == 0 and False:
                 print(self.id)
                 print(f"Body Pos: %s" % self.bodyPos)
                 print(f"BAngle %s" % self.bodyA)
-                print(f"TAngle %s" % self.tarA)
-                print(f"Tag %s" % self.tag)
-                print(f"Born %s" % self.timeBorn)
-                print(f"Killer %s" % self.lastKiller)
-                print(self.gridID)
-            #print(f"ScaleD %s" % self.scaleD)
 
-            #print(self.gridID)
-
-
-            #self.model_pred(np.ndarray((2,), buffer=np.array(self.getInfo)),self.weights)
             self.lastTime = self.currTime
 
 
@@ -135,7 +132,7 @@ class CpgActorController(ActorController):
         """ Returns the unit vector of the vector.  """
         return vector / np.linalg.norm(vector)
 
-    #I dont use this function anymore (and it's direction blind), but it might be useful in the future
+    #DFEPRECATED: finds the anglew between two vectors, does not take direction into account
     def angle_between(self, v1, v2):
         """ Returns the angle in radians between vectors 'v1' and 'v2'::
             >>> angle_between((1, 0, 0), (-1, 0, 0))
@@ -147,25 +144,24 @@ class CpgActorController(ActorController):
         #signed_angle = math.atan2(v1_u[0]*v2_u[1]- v1_u[1]*v2_u[0],v1_u[0]*v2_u[0] + v1_u[1]*v2_u[1])
         return (np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
-    #This is the correct way to to get the angle (pitch) from a quaternion
+    #Calculates the angle (pitch) from a quaternion
     def quat_to_angle(self, q):
         ang = math.atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
         return ang
 
+    #DEPRECATED: for debugging purposes, you can change tarA to something useful
     def findTarAngle(self):
         #This will be a neural network but for now its more simple 
         self.tarA = -1*self.bodyA + (math.pi/4.0)*1
         pass
 
-    #Applies the ELU activation function for the NN
+    #DEPRECATED: Applies the ELU activation function for the NN
     def np_elu(self,x):
         mask = np.where(x<0)
         x[mask] = np.exp(x[mask])-1
         return x
     
-
-    
-    #Momentum allows the steering to happen gradually rather than quick flicks
+    #DEPRECATED: Momentum allows the steering to happen gradually rather than quick flicks
     def calcMomentum(self,scaleD):
         #scaleD is expected to be between 0 and 1
         if self.momentum > 0:
@@ -174,68 +170,41 @@ class CpgActorController(ActorController):
             return scaleD + (1-scaleD)*self.momentum/20
             self.momentum = self.momentum - 1
 
-    #Calculates the NN ouput manually with numpy
+    #Calculates the NN ouput manually with numpy's dot product
     def model_pred(self,input, weights):
         temp = input.copy()
-        #print("sp")
-        #print(self.id)
-        #print(weights)
-        #print(self.smallDist)
-        #print(temp)
         for weight, bias in zip(weights[0],weights[1]):
-            #print("i")
             temp = np.dot(temp, weight)
-            #+(bias)
-            #print("f")
-            #print(temp)
-            #temp = self.np_elu(temp)
-            #temp = np.tanh(temp)
+            #This is our custom sigmoid activation function
             temp = ((1/(1 + np.exp(-2*temp))) - 0.5)*2
-            #print("c")
-            #print(temp)
-        #print(temp)
         return temp
     
     def makeCognitiveOutput(self,ang,inDist,tagRatio):
-        #There might be some reference issue here, check me
+        #Output is an array with two values from the neural network
         output = list(self.model_pred(np.array([ang,inDist,tagRatio]),self.weights)).copy()
-        #self.tarA = output[0]*math.pi
-        #print(output)
-        #cut
-        #sigged = ((1/(1 + np.exp(-output[0]))) - 0.5)*2
-        #print(output)
-        #sigged = (abs(output[0])**2)*np.sign(output[0])
-        sigged = output[0]
-        #sigged = output[0]
-        #sigged = np.arctanh(output[0])
-        #print(sigged)
-        #LR = 1 if output[1] > 0 else -1
-        #self.tarA = sigged*LR
 
-        ###this helps remove the crazier movements
+        #stores the raw target angle value
+        sigged = output[0]
+        
+        ### mapping the raw target angle value to a locked angle helps remove the more chaotic movements
         if sigged >= 0:
             self.tarA = 0.7
         else:
             self.tarA = -0.7
-        #self.tarA = np.clip(sigged,a_min=(self.tarA - 0.03),a_max=(self.tarA + 0.03))
+        
+        #stores the raw tag output, which is converted to a boolean, positives are +1, negatives are -1
         tagRaw = np.clip(output[1],a_min=-1,a_max=1)
         if tagRaw > 0:
             tagRaw = 1
         else:
             tagRaw = -1
-        #self.tag = output[1]
-        if np.random.uniform(0.0,1.0) < 0.1 and False:
-            self.tag = tagRaw
 
+        #You may only change the tag every 100 seconds
         if self.currTime - self.lastTag > 100:
             self.tag = tagRaw
             self.lastTag = datetime.now().timestamp()
-            
-        #print(f"this is tag %s " % self.tag)
 
         self.momentum = 100
-
-        #print(self.tarA)
 
     #My orientation equation gives angles outside of the boundaries (-pi,pi) this fixes it
     def modusAng(self,ang):
@@ -243,7 +212,7 @@ class CpgActorController(ActorController):
         modused = (phase % (2*math.pi)) - math.pi
         return modused
 
-    #Actor recieves real-time information here
+    #Actor recieves real-time information here, such as its rotation quaternion and its position
     def passInfo(self, *args) -> None:
         actorState = args[0]
         ori = actorState.orientation
@@ -283,19 +252,18 @@ class CpgActorController(ActorController):
         #Copying means we are not referencing, we REALLY dont want to change self._state
         outPuts = self._state[0 : self._num_output_neurons].copy()
 
-        #I SHOULD PROBABLY MOVE THIS INTO COGNITIVE
+        #scaleD is the scaling factor, calculated by the Gongin paper on Targeted Steering
         scaleD = ((math.pi - abs(self.tarA))/math.pi)**self.p
         self.scaleD = scaleD
-        #scaleD = self.calcMomentum(scaleC)
 
         if self.tarA < 0:
             for i in self._jointsLeft:
                 outPuts[i] = outPuts[i]*scaleD
-                #outPuts[i] = 0
+                #outPuts[i] = 0 # uncomment for debugging
         else:
             for j in self._jointsRight:
                 outPuts[j] = outPuts[j]*scaleD
-                #outPuts[j] = 0
+                #outPuts[j] = 0 # uncomment for debugging
         
         return list(
             np.clip(
