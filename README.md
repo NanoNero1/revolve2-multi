@@ -1,9 +1,20 @@
 <img  align="right" width="150" height="150"  src="/docs/source/logo.png">
 
 # Revolve2-Multi
-Welcome to the Revolve2-Multi Tutorial, it goes along with Dimitri Kachler's thesis, "Predator-Prey Dyanimcs in an Open-Ended Environment".
+Welcome to the Revolve2-Multi Tutorial, it goes along with Dimitri Kachler's thesis, "Predator-Prey Dynamics in an Open-Ended Environment".
 This readme will guide you along the steps to be able to recreate the experiments found in the paper.
 
+#### 0. The main folder where our code for the experiment is found at:
+
+/revolve2-multi/examples/sanity3P/
+
+The main files to look at are:
+
+optimize.py
+
+optimizer.py
+
+genotype.py
 
 #### 1. First you want to create a virtual environment with Python version 3.8 as the primary Python distribution.
 Then you want to create a virtual environment to serve as a capsule for all the libraries:
@@ -17,19 +28,19 @@ Then, activate the virtual environment:
 
 #### 3. In the virtual environment, we install the necessary libraries:
 
-pip install /yourdir/core
+pip install /yourdir/revolve2-multi/core
 
-pip install /yourdir/standard_resources/
+pip install /yourdir/revolve2-multi/standard_resources/
 
-pip install /yourdir/genotypes/cppnwin
+pip install /yourdir/revolve2-multi/genotypes/cppnwin
 
-pip install /yourdir/runners/mujoco
+pip install /yourdir/revolve2-multi/runners/mujoco
 
 #### 4. We change our directory to the experiment folder, this is also where all the data will be:
 
-cd /home/ubuntu/Desktop/work/BProject/multii/revolve2-multi/examples/sanity3P/
+cd /yourdir/revolve2-multi/examples/sanity3P/
 
-#### 5. The experiment runs by activating optimize.py. You should recieve preliminary warnings, at which point the experiment is running:
+#### 5. The experiment runs by activating optimize.py. You should receive preliminary warnings, at which point the experiment is running:
 
 python3 optimize.py
 
