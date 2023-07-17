@@ -81,7 +81,7 @@ class EnvironmentActorController(EnvironmentController):
         self.configuration = [3,3,2]
 
         #Experiment Time
-        self.maxSimTime = 6000
+        self.maxSimTime = 6500
 
 
         #DEPRECATED
