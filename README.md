@@ -44,7 +44,7 @@ cd /yourdir/revolve2-multi/examples/sanity3P/
 
 python3 optimize.py
 
-#### 6. After 6000 seconds, the experiment will automatically stop and the data will be stored in two files: "countries.csv" and "deathBorn.csv".
+#### 6. After 6500 seconds (instead of 6000 just to be safe), the experiment will automatically stop and the data will be stored in two files: "countries.csv" and "deathBorn.csv".
 
 #### 7. Copy and rename both files according to the experiment run, i.e. "countries4.csv" and upload both files to the Deepnote project to visualize the data:
 
